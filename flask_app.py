@@ -4,12 +4,14 @@ import joblib
 import numpy as np
 import os
 
+app = Flask(__name__)
+CORS(app)
+
 # Load the trained model and columns
 model = joblib.load("waste_predictor_model.pkl")
 model_columns = joblib.load("model_columns.pkl")
 
-app = Flask(__name__)
-CORS(app)
+
 @app.route('/')
 def home():
     return "Walmart Waste Predictor API is running!"
