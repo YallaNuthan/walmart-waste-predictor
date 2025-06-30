@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Walmart Waste Risk Predictor</title>
+  <style>
+    body {
+      background: #f5f7fa;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    .container {
+      background: white;
+      padding: 25px 40px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      background-color: #2ecc71;
+      color: white;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #27ae60;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #e67e22;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>🧠 Walmart Waste Risk Predictor</h2>
+
+    <form id="predictForm">
+      <label>Shelf Life Days:</label>
+      <input type="number" name="shelf_life_days" required>
+
+      <label>Current Stock:</label>
+      <input type="number" name="current_stock" required>
+
+      <label>Sold Last 7 Days:</label>
+      <input type="number" name="sold_last_7_days" required>
+
+      <label>Forecasted Demand:</label>
+      <input type="number" name="forecasted_demand" required>
+
+      <label>Temperature (°C):</label>
+      <input type="number" name="temperature_C" required>
+
+      <label>Humidity (%):</label>
+      <input type="number" name="humidity_%" required>
+
+      <label>Category:</label>
+      <select name="category">
+        <option value="Dairy">Dairy</option>
+        <option value="Fruit">Fruit</option>
+        <option value="Meat">Meat</option>
+        <option value="Vegetable">Vegetable</option>
+      </select>
+
+      <button type="submit">Predict Waste Risk</button>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('predictForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const category = formData.get("category");
+
+      const json = {
+        shelf_life_days: parseInt(formData.get("shelf_life_days")),
+        current_stock: parseInt(formData.get("current_stock")),
+        sold_last_7_days: parseInt(formData.get("sold_last_7_days")),
+        forecasted_demand: parseInt(formData.get("forecasted_demand")),
+        temperature_C: parseInt(formData.get("temperature_C")),
+        humidity_%: parseInt(formData.get("humidity_%")),
+        category_Dairy: category === "Dairy" ? 1 : 0,
+        category_Fruit: category === "Fruit" ? 1 : 0,
+        category_Meat: category === "Meat" ? 1 : 0,
+        category_Vegetable: category === "Vegetable" ? 1 : 0
+      };
+
+      const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(json)
+      });
+
+      const result = await response.json();
+      document.getElementById("result").innerText = 
+        "Prediction: " + result.risk_level + 
+        " (Value: " + result.waste_risk_prediction + ")";
+    });
+  </script>
+
+</body>
+</html>
