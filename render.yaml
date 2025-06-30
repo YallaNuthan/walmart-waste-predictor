@@ -1,11 +1,6 @@
-build:
-  environment:
-    pythonVersion: 3.10
-
 services:
   - type: web
     name: walmart-waste-api
-    env: python
+    env: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python flask_app.py
+    dockerfilePath: ./Dockerfile
