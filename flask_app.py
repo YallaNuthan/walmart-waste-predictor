@@ -1,47 +1,29 @@
 from flask import Flask, request, jsonify
 import joblib
-import pandas as pd
+import numpy as np
+import os
 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
-
+# Load the trained model and columns
+model = joblib.load("waste_predictor_model.pkl")
+model_columns = joblib.load("model_columns.pkl")
 
 app = Flask(__name__)
 
-# Load the model and column names
-model = joblib.load("waste_risk_model.pkl")
-model_columns = joblib.load("model_columns.pkl")
-
 @app.route('/')
 def home():
-    return "Walmart Waste Risk Predictor API is running!"
+    return "Walmart Waste Predictor API is running!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get JSON input
-        data = request.get_json(force=True)
-
-        # Convert to DataFrame with the correct column order
-        input_df = pd.DataFrame([data])
-        input_df = input_df.reindex(columns=model_columns, fill_value=0)
-
-        # Make prediction
-        prediction = model.predict(input_df)[0]
-
-        # Return response
-        return jsonify({
-            "waste_risk_prediction": int(prediction),
-            "risk_level": "High" if prediction == 1 else "Low"
-        })
-
+        json_ = request.json
+        query = [json_[col] for col in model_columns]
+        prediction = model.predict([query])[0]
+        return jsonify({'prediction': prediction})
     except Exception as e:
-        return jsonify({"error": str(e)})
-
-# Run the Flask app
-@app.route('/test', methods=['POST'])
-def test_post():
-    return jsonify({"message": "Postman is working!"})
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # This is the part that fixes the Render port issue
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
