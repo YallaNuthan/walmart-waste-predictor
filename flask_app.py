@@ -19,9 +19,10 @@ def predict():
         json_ = request.json
         query = [json_[col] for col in model_columns]
         prediction = model.predict([query])[0]
-        return jsonify({'prediction': prediction})
+        return jsonify({'prediction': int(prediction)})
     except Exception as e:
         return jsonify({'error': str(e)})
+
 
 if __name__ == '__main__':
     # This is the part that fixes the Render port issue
