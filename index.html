@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Walmart Waste Predictor</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-top: 50px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #d62828;
+      margin-bottom: 24px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 10px 0 5px;
+      color: #333;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #d62828;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #a31d1d;
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 20px;
+      color: #2d6a4f;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Walmart Waste Predictor</h2>
+    <form id="predictForm">
+      <label>Shelf Life (Days)</label>
+      <input type="number" name="shelf_life_days" required />
+
+      <label>Current Stock</label>
+      <input type="number" name="current_stock" required />
+
+      <label>Sold Last 7 Days</label>
+      <input type="number" name="sold_last_7_days" required />
+
+      <label>Forecasted Demand</label>
+      <input type="number" name="forecasted_demand" required />
+
+      <label>Temperature (°C)</label>
+      <input type="number" step="0.1" name="temperature_C" required />
+
+      <label>Humidity (%)</label>
+      <input type="number" name="humidity" required />
+
+      <label>Category</label>
+      <select name="category">
+        <option value="Fruit">Fruit</option>
+        <option value="Meat">Meat</option>
+        <option value="Vegetable">Vegetable</option>
+      </select>
+
+      <button type="submit">Predict</button>
+    </form>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('predictForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const category = form.category.value;
+
+      const data = {
+        shelf_life_days: parseInt(form.shelf_life_days.value),
+        current_stock: parseInt(form.current_stock.value),
+        sold_last_7_days: parseInt(form.sold_last_7_days.value),
+        forecasted_demand: parseInt(form.forecasted_demand.value),
+        temperature_C: parseFloat(form.temperature_C.value),
+        humidity: parseInt(form.humidity.value),
+        category_Fruit: category === "Fruit" ? 1 : 0,
+        category_Meat: category === "Meat" ? 1 : 0,
+        category_Vegetable: category === "Vegetable" ? 1 : 0
+      };
+
+      const res = await fetch('https://walmart-waste-predictor-1.onrender.com/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      document.getElementById('result').innerText =
+        result.prediction !== undefined
+          ? `Prediction: ${result.prediction}`
+          : `Error: ${result.error}`;
+    });
+  </script>
+</body>
+</html>
