@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: walmart-waste-api
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python flask_app.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
