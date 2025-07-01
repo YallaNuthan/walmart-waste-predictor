@@ -1,0 +1,7 @@
+from_store	to_store	distance_km
+Mumbai	Pune	150
+Delhi	Kolkata	1460
+Chennai	Hyderabad	630
+Bangalore	Hyderabad	570
+Mumbai	Delhi	1420
+Pune	Hyderabad	620
