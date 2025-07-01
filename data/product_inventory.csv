@@ -1,11 +1,11 @@
-product_id name category stock expiry_date store_location freshness_score
-101	Bananas	Fruits	100 2025-07-04	Mumbai	0.75
-102	Milk 1L	Dairy	80 2025-07-02	Delhi	0.68
-103	Tomatoes	Vegetables	90 2025-07-03 Pune	0.81
-104	Eggs 12pc	Dairy	60 2025-07-01	Kolkata	0.84
-105	Lettuce	Vegetables	50 2025-07-03	Bangalore	0.72
-106	Curd 500ml	Dairy	70	2025-07-05	Delhi	0.86
-107	Strawberries	Fruits	40	2025-07-02	Chennai	0.67
-108	Carrots	Vegetables	110 2025-07-06	Hyderabad	0.91
-109	Paneer 200g	Dairy	55 2025-07-04	Mumbai	0.79
-110	Grapes	Fruits	45 2025-07-06 Pune	0.74
+product_id	name	category	stock	expiry_date	store_location	freshness_score
+101	Bananas	Fruits	100	04-07-2025	Mumbai	0.75
+102	Milk 1L	Dairy	80	02-07-2025	Delhi	0.68
+103	Tomatoes	Vegetables	90	03-07-2025	Pune	0.81
+104	Eggs 12pc	Dairy	60	01-07-2025	Kolkata	0.84
+105	Lettuce	Vegetables	50	03-07-2025	Bangalore	0.72
+106	Curd 500ml	Dairy	70	05-07-2025	Delhi	0.86
+107	Strawberries	Fruits	40	02-07-2025	Chennai	0.67
+108	Carrots	Vegetables	110	06-07-2025	Hyderabad	0.91
+109	Paneer 200g	Dairy	55	04-07-2025	Mumbai	0.79
+110	Grapes	Fruits	45	03-07-2025	Pune	0.74
