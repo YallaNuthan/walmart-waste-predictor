@@ -77,9 +77,11 @@ def generate_recommendations():
 
     # Use ISO format "%Y-%m-%d" if CSV has "2025-07-04" style dates
     inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y")
-    today = datetime.today().date()
-    formatted_today = today.strftime("%d-%m-%Y")
-    inventory["days_to_expiry"] = (inventory["expiry_date"] - formatted_today).dt.days
+    today = pd.to_datetime(datetime.today().date())
+    inventory["days_to_expiry"] = (inventory["expiry_date"] - today).dt.days
+    inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
+    
+    
 
     merged = pd.merge(inventory, demand, how='left', on=["product_id", "store_location"])
 
