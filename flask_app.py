@@ -71,13 +71,14 @@ def recommend_action():
 
 # ✅ Real data processing logic
 def generate_recommendations():
-    inventory = pd.read_csv("data/product_inventory.csv")
-    demand = pd.read_csv("data/store_demand.csv")
-    distance = pd.read_csv("data/store_distance.csv")
+    inventory = pd.read_csv("data/product_inventory.csv", sep='\t')
+    demand = pd.read_csv("data/store_demand.csv", sep='\t')
+    distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
     # Use ISO format "%Y-%m-%d" if CSV has "2025-07-04" style dates
-    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%Y-%m-%d")
-    today = datetime.today().date()
+    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y")
+    formatted_today = datetime.today().date()
+    today = formatted_today.strftime("%d-%m-%Y")
     inventory["days_to_expiry"] = (inventory["expiry_date"] - today).dt.days
 
     merged = pd.merge(inventory, demand, how='left', on=["product_id", "store_location"])
