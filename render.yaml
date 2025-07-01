@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: walmart-waste-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile

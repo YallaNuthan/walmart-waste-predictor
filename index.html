@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Walmart Waste Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .nav-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .nav-buttons button:hover {
+      background-color: #0056b3;
+    }
+
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .page {
+      display: none;
+      width: 100%;
+    }
+    .page.active {
+      display: block;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 18px;
+      background-color: #f9f9f9;
+    }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      font-style: italic;
+      color: #999;
+    }
+
+    /* Smart Table */
+    .table-container {
+      background-color: white;
+      padding: 30px;
+      width: 90%;
+      max-width: 1100px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+
+    .Donate {
+      color: red;
+      font-weight: bold;
+    }
+
+    .Transfer {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .Keep {
+      color: green;
+      font-weight: bold;
+    }
+
+    .pagination {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid #007bff;
+      background: white;
+      color: #007bff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .pagination button.active {
+      background: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <div class="nav-buttons">
+    <button onclick="showPage('page1')">Page 1: Demand Forecast</button>
+    <button onclick="showPage('page2')">Page 2: Waste Risk</button>
+    <button onclick="showPage('page3')">Page 3: Recommendations</button>
+  </div>
+
+  <!-- Page 1 -->
+  <div id="page1" class="page active">
+    <div class="container">
+      <h2>📈 Demand Forecast</h2>
+      <div id="forecastResult" class="result"></div>
+      <div id="forecastSpinner" class="spinner">⏳ Loading...</div>
+      <form id="forecastForm">
+        <label>Previous Sales</label>
+        <input type="number" name="previous_sales" required />
+        <label>Current Stock</label>
+        <input type="number" name="stock" required />
+        <label>Temperature (°C)</label>
+        <input type="number" name="temperature_C" required />
+        <button type="submit">Forecast Demand</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Page 2 -->
+  <div id="page2" class="page">
+    <div class="container">
+      <h2>🗑 Waste Risk Prediction</h2>
+      <div id="predictResult" class="result"></div>
+      <div id="predictSpinner" class="spinner">⏳ Loading...</div>
+      <form id="predictForm">
+        <label>Shelf Life (Days)</label>
+        <input type="number" name="shelf_life_days" required />
+        <label>Current Stock</label>
+        <input type="number" name="current_stock" required />
+        <label>Sold Last 7 Days</label>
+        <input type="number" name="sold_last_7_days" required />
+        <label>Forecasted Demand</label>
+        <input type="number" name="forecasted_demand" required />
+        <label>Temperature (°C)</label>
+        <input type="number" name="temperature_C" required />
+        <label>Humidity (%)</label>
+        <input type="number" name="humidity_percent" required />
+        <label>Category</label>
+        <select name="category">
+          <option value="Fruit">Fruit</option>
+          <option value="Meat">Meat</option>
+          <option value="Vegetable">Vegetable</option>
+          <option value="Dairy">Dairy</option>
+        </select>
+        <button type="submit">Predict Waste Risk</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Page 3 -->
+  <div id="page3" class="page">
+    <div class="container">
+      <h2>📦 Action Recommendation</h2>
+      <div id="recommendResult" class="result"></div>
+      <div id="recommendSpinner" class="spinner">⏳ Loading...</div>
+      <form id="recommendForm">
+        <label>Shelf Life Days</label>
+        <input type="number" name="shelf_life_days" required />
+        <label>Current Stock</label>
+        <input type="number" name="current_stock" required />
+        <label>Sold Last 7 Days</label>
+        <input type="number" name="sold_last_7_days" required />
+        <label>Forecasted Demand</label>
+        <input type="number" name="forecasted_demand" required />
+        <label>Previous Sales</label>
+        <input type="number" name="previous_sales" required />
+        <label>Stock</label>
+        <input type="number" name="stock" required />
+        <label>Temperature (°C)</label>
+        <input type="number" name="temperature_C" required />
+        <label>Humidity (%)</label>
+        <input type="number" name="humidity_percent" required />
+        <label>Category</label>
+        <select name="category">
+          <option value="Dairy">Dairy</option>
+          <option value="Fruit">Fruit</option>
+          <option value="Meat">Meat</option>
+          <option value="Vegetable">Vegetable</option>
+        </select>
+        <button type="submit">Get Recommendation</button>
+      </form>
+    </div>
+
+    <div class="table-container">
+      <h2 style="text-align:center">📊 Smart Bulk Recommendations</h2>
+      <button onclick="loadRecommendations()">🔄 Load Recommendations</button>
+      <table id="recommendationTable">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Store</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Freshness</th>
+            <th>Days Left</th>
+            <th>Daily Demand</th>
+            <th>Risk</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="pagination" id="paginationControls"></div>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const BASE_URL = "https://walmart-waste-predictor.onrender.com";
+
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    // Forecast
+    document.getElementById('forecastForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target, spinner = document.getElementById("forecastSpinner"), resultBox = document.getElementById("forecastResult");
+      spinner.style.display = "block";
+      const payload = {
+        previous_sales: +form.previous_sales.value,
+        stock: +form.stock.value,
+        temperature_C: +form.temperature_C.value
+      };
+      const res = await fetch(`${BASE_URL}/forecast_demand`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      spinner.style.display = "none";
+      resultBox.innerText = result.forecasted_demand !== undefined
+        ? `Forecasted Demand: ${result.forecasted_demand}` : `Error: ${result.error}`;
+      document.querySelectorAll("input[name='forecasted_demand']").forEach(input => {
+        input.value = result.forecasted_demand;
+      });
+    });
+
+    // Waste Prediction
+    document.getElementById('predictForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target, spinner = document.getElementById("predictSpinner"), resultBox = document.getElementById("predictResult");
+      spinner.style.display = "block";
+      const cat = form.category.value;
+      const payload = {
+        shelf_life_days: +form.shelf_life_days.value,
+        current_stock: +form.current_stock.value,
+        sold_last_7_days: +form.sold_last_7_days.value,
+        forecasted_demand: +form.forecasted_demand.value,
+        temperature_C: +form.temperature_C.value,
+        ["humidity_%"]: +form.humidity_percent.value,
+        category_Dairy: cat === "Dairy" ? 1 : 0,
+        category_Fruit: cat === "Fruit" ? 1 : 0,
+        category_Meat: cat === "Meat" ? 1 : 0,
+        category_Vegetable: cat === "Vegetable" ? 1 : 0
+      };
+      const res = await fetch(`${BASE_URL}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      spinner.style.display = "none";
+      resultBox.innerText = result.prediction !== undefined ? `Prediction: ${result.prediction}` : `Error: ${result.error}`;
+    });
+
+    // Recommendation
+    document.getElementById('recommendForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target, spinner = document.getElementById("recommendSpinner"), resultBox = document.getElementById("recommendResult");
+      spinner.style.display = "block";
+      const cat = form.category.value;
+      const payload = {
+        shelf_life_days: +form.shelf_life_days.value,
+        current_stock: +form.current_stock.value,
+        sold_last_7_days: +form.sold_last_7_days.value,
+        forecasted_demand: +form.forecasted_demand.value,
+        previous_sales: +form.previous_sales.value,
+        stock: +form.stock.value,
+        temperature_C: +form.temperature_C.value,
+        ["humidity_%"]: +form.humidity_percent.value,
+        category_Dairy: cat === "Dairy" ? 1 : 0,
+        category_Fruit: cat === "Fruit" ? 1 : 0,
+        category_Meat: cat === "Meat" ? 1 : 0,
+        category_Vegetable: cat === "Vegetable" ? 1 : 0
+      };
+      const res = await fetch(`${BASE_URL}/recommend_action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      spinner.style.display = "none";
+      resultBox.innerText = result.recommendation !== undefined
+        ? `Action: ${result.recommendation} (Risk: ${result.expiry_risk}, Demand: ${result.forecasted_demand})`
+        : `Error: ${result.error}`;
+      resultBox.style.color = result.recommendation?.includes("Donate") ? "red" :
+                              result.recommendation?.includes("Transfer") ? "orange" : "green";
+    });
+
+    // Smart Table
+    let allData = [], currentPage = 1, pageSize = 5;
+
+    function renderPage(page) {
+      const tbody = document.querySelector("#recommendationTable tbody");
+      tbody.innerHTML = "";
+      const start = (page - 1) * pageSize, end = start + pageSize;
+      allData.slice(start, end).forEach(row => {
+        const tr = document.createElement("tr");
+        const riskText = row.expiry_risk === 1 ? "High" : "Low";
+        let actionClass = row.recommendation.includes("Donate") ? "Donate" :
+                          row.recommendation.includes("Transfer") ? "Transfer" : "Keep";
+        tr.innerHTML = `
+          <td>${row.name}</td>
+          <td>${row.store_location}</td>
+          <td>${row.category}</td>
+          <td>${row.stock}</td>
+          <td>${row.freshness_score}</td>
+          <td>${row.days_to_expiry}</td>
+          <td>${row.daily_demand}</td>
+          <td>${riskText}</td>
+          <td class="${actionClass}">${row.recommendation}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      renderPaginationControls();
+    }
+
+    function renderPaginationControls() {
+      const totalPages = Math.ceil(allData.length / pageSize);
+      const container = document.getElementById("paginationControls");
+      container.innerHTML = "";
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.classList.toggle("active", i === currentPage);
+        btn.onclick = () => {
+          currentPage = i;
+          renderPage(currentPage);
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    async function loadRecommendations() {
+      const res = await fetch(`${BASE_URL}/bulk_recommendations`);
+      allData = await res.json();
+      currentPage = 1;
+      renderPage(currentPage);
+    }
+  </script>
+</body>
+</html>
