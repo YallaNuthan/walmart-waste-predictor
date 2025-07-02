@@ -202,11 +202,9 @@ def bulk_recommendations():
 
 # ===================== Leaderboard Functionality ==========================
 
-
-
 LEADERBOARD_FILE = "data/waste_leaderboard.csv"
 
-# Ensure file exists with headers
+# Ensure the file exists with headers
 if not os.path.exists(LEADERBOARD_FILE):
     with open(LEADERBOARD_FILE, "w", newline="") as f:
         writer = csv.writer(f)
@@ -222,13 +220,13 @@ def upload_waste_report():
         if not required_cols.issubset(df.columns):
             return jsonify({"success": False, "error": "Missing required columns."})
 
-        # ✅ Convert to proper d-m-Y date
+        # ✅ Convert date to d-m-Y and then to datetime.date
         df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
 
-        # ✅ Compute reward points
+        # ✅ Calculate reward points
         df["points"] = df["waste_donated_kg"] * 10 + df["waste_reduced_kg"] * 5 - df["waste_generated_kg"] * 2
 
-        # ✅ Append to leaderboard CSV
+        # ✅ Append to CSV
         df.to_csv(LEADERBOARD_FILE, mode='a', index=False, header=False)
 
         return jsonify({"success": True, "message": "Report uploaded successfully!"})
@@ -239,16 +237,19 @@ def upload_waste_report():
 def daily_leaderboard():
     try:
         df = pd.read_csv(LEADERBOARD_FILE)
-        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
+        df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce").dt.date
 
         today = datetime.today().date()
         daily = df[df["date"] == today]
 
-        # Get top 3
         daily_sorted = daily.sort_values("points", ascending=False).reset_index(drop=True)
-        daily_sorted["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily_sorted) - 3)
+        badges = ["🥇", "🥈", "🥉"]
+        daily_sorted["badge"] = [""] * len(daily_sorted)
+        for i in range(min(3, len(daily_sorted))):
+            daily_sorted.at[i, "badge"] = badges[i]
 
         daily_sorted["date"] = daily_sorted["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
+
         return jsonify(daily_sorted.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -257,9 +258,8 @@ def daily_leaderboard():
 def monthly_leaderboard():
     try:
         df = pd.read_csv(LEADERBOARD_FILE)
-        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
+        df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce").dt.date
 
-        # Filter current month
         today = datetime.today()
         df = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
 
@@ -271,12 +271,17 @@ def monthly_leaderboard():
         }).reset_index()
 
         monthly = monthly.sort_values("points", ascending=False).reset_index(drop=True)
-        monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
+        monthly["badge"] = ["🏆 Monthly Winner"] + [""] * (len(monthly) - 1)
 
         return jsonify(monthly.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
 
+
+
+
+
+ 
 if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
