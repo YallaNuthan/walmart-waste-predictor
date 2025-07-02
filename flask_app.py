@@ -115,10 +115,10 @@ def generate_recommendations():
     distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
     today = datetime.today().date()
-
+    inventory["expiry_date"] = inventory["expiry_date"].astype(str)
     def calculate_days_left(date_str):
         try:
-            expiry = datetime.strptime(date_str, "%d-%m-%Y").date()
+            expiry = datetime.strptime(date_str.strip(), "%d-%m-%Y").date()
             return (expiry - today).days
         except Exception:
             return None
