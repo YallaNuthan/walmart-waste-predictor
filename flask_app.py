@@ -113,9 +113,19 @@ def generate_recommendations():
     distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
     # Use ISO format "%Y-%m-%d" if CSV has "2025-07-04" style dates
-    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y")
-    today = pd.to_datetime(datetime.today().date())
-    inventory["days_to_expiry"] = (inventory["expiry_date"] - today).dt.days
+    
+    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
+    inventory = inventory.dropna(subset=["expiry_date"])
+
+# Step 2: Calculate days_to_expiry
+    today = datetime.today().date()
+    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).dt.days
+
+# Step 3: Add human-readable status
+   def label_expiry_status(days):
+       return "Already Expired" if days < 0 else f"{days} day(s)"
+
+    inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
     inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
     
     
@@ -151,10 +161,20 @@ def generate_recommendations():
         axis=1
     )
 
-    return merged[[
-        "product_id", "name", "store_location", "category", "stock", "freshness_score",
-        "days_to_expiry", "daily_demand", "expiry_risk", "recommendation"
-    ]].to_dict(orient="records")
+    # Add expiry_status column first
+merged["expiry_status"] = merged["days_to_expiry"].apply(
+    lambda d: "Already Expired" if d < 0 else f"{d} day(s)"
+)
+
+# Format expiry_date (optional but nice)
+merged["expiry_date"] = merged["expiry_date"].dt.strftime("%d-%m-%Y")
+
+# Then return this
+return merged[[
+    "product_id", "name", "store_location", "category", "stock", "freshness_score",
+    "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
+]].to_dict(orient="records")
+
 
 # ✅ Register the smart recommendation route
 @app.route("/bulk_recommendations", methods=["GET"])
