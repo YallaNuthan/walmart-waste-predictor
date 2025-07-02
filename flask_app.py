@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 from datetime import datetime
+import csv
 
 app = Flask(__name__)
 CORS(app)
@@ -198,6 +199,83 @@ def generate_recommendations():
 def bulk_recommendations():
     data = generate_recommendations()
     return jsonify(data)
+
+# ===================== Leaderboard Functionality ==========================
+
+
+
+LEADERBOARD_FILE = "data/waste_leaderboard.csv"
+
+# Ensure file exists with headers
+if not os.path.exists(LEADERBOARD_FILE):
+    with open(LEADERBOARD_FILE, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "points"])
+
+@app.route("/upload_waste_report", methods=["POST"])
+def upload_waste_report():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
+
+        required_cols = {"store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date"}
+        if not required_cols.issubset(df.columns):
+            return jsonify({"success": False, "error": "Missing required columns."})
+
+        # ✅ Convert to proper d-m-Y date
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
+
+        # ✅ Compute reward points
+        df["points"] = df["waste_donated_kg"] * 10 + df["waste_reduced_kg"] * 5 - df["waste_generated_kg"] * 2
+
+        # ✅ Append to leaderboard CSV
+        df.to_csv(LEADERBOARD_FILE, mode='a', index=False, header=False)
+
+        return jsonify({"success": True, "message": "Report uploaded successfully!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/daily_leaderboard", methods=["GET"])
+def daily_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
+
+        today = datetime.today().date()
+        daily = df[df["date"] == today]
+
+        # Get top 3
+        daily_sorted = daily.sort_values("points", ascending=False).reset_index(drop=True)
+        daily_sorted["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily_sorted) - 3)
+
+        daily_sorted["date"] = daily_sorted["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
+        return jsonify(daily_sorted.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/monthly_leaderboard", methods=["GET"])
+def monthly_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
+
+        # Filter current month
+        today = datetime.today()
+        df = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
+
+        monthly = df.groupby("store_location").agg({
+            "waste_donated_kg": "sum",
+            "waste_reduced_kg": "sum",
+            "waste_generated_kg": "sum",
+            "points": "sum"
+        }).reset_index()
+
+        monthly = monthly.sort_values("points", ascending=False).reset_index(drop=True)
+        monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
+
+        return jsonify(monthly.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
     print("✅ Starting Flask...")
