@@ -36,7 +36,7 @@ def upload_csv():
             lambda x: x.days if pd.notna(x) else pd.NA
         )
 
-        # ✅ Safe expiry risk logic
+        # Expiry risk logic
         def check_expiry_risk(row):
             if pd.isna(row["days_to_expiry"]) or pd.isna(row["freshness_score"]):
                 return 0
@@ -44,13 +44,36 @@ def upload_csv():
 
         df["expiry_risk"] = df.apply(check_expiry_risk, axis=1)
 
-        # Simple recommendation logic
+        # Add expiry_status
+        def label_expiry_status(days):
+            if pd.isna(days):
+                return "Invalid Date"
+            elif days < 0:
+                return "Already Expired"
+            else:
+                return f"{days} day(s) left"
+
+        df["expiry_status"] = df["days_to_expiry"].apply(label_expiry_status)
+
+        # Add dummy previous_sales and temperature_C if not in CSV
+        if 'previous_sales' not in df.columns:
+            df['previous_sales'] = df['stock'].apply(lambda x: max(1, int(x * 0.7)))
+        if 'temperature_C' not in df.columns:
+            df['temperature_C'] = 25
+
+        # Predict daily_demand using demand_model
+        df["daily_demand"] = df.apply(
+            lambda row: round(demand_model.predict([[row["previous_sales"], row["stock"], row["temperature_C"]]])[0], 2),
+            axis=1
+        )
+
+        # Recommendation logic
         df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-        # Return filtered response
+        # Return updated response
         output = df[[
             "product_id", "name", "store_location", "category", "stock", "freshness_score",
-            "days_to_expiry", "expiry_risk", "recommendation"
+            "expiry_status", "daily_demand", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
         return jsonify({"success": True, "data": output})
