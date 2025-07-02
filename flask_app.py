@@ -61,7 +61,9 @@ def predict():
         json_ = request.json
         query = [json_[col] for col in model_columns]
         prediction = model.predict([query])[0]
-        return jsonify({'prediction': int(prediction)})
+        label = "High Risk" if prediction == 1 else "Low Risk"
+        return jsonify({'prediction': label})
+
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -162,18 +164,18 @@ def generate_recommendations():
     )
 
     # Add expiry_status column first
-merged["expiry_status"] = merged["days_to_expiry"].apply(
-    lambda d: "Already Expired" if d < 0 else f"{d} day(s)"
-)
+    merged["expiry_status"] = merged["days_to_expiry"].apply(
+        lambda d: "Already Expired" if d < 0 else f"{d} day(s)"
+    )
 
 # Format expiry_date (optional but nice)
-merged["expiry_date"] = merged["expiry_date"].dt.strftime("%d-%m-%Y")
+    merged["expiry_date"] = merged["expiry_date"].dt.strftime("%d-%m-%Y")
 
 # Then return this
-return merged[[
-    "product_id", "name", "store_location", "category", "stock", "freshness_score",
-    "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
-]].to_dict(orient="records")
+    return merged[[
+        "product_id", "name", "store_location", "category", "stock", "freshness_score",
+        "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
+    ]].to_dict(orient="records")
 
 
 # ✅ Register the smart recommendation route
