@@ -202,13 +202,15 @@ def bulk_recommendations():
 
 # ===================== Leaderboard Functionality ==========================
 
+
+
 LEADERBOARD_FILE = "data/waste_leaderboard.csv"
 
 # Ensure the file exists with headers
 if not os.path.exists(LEADERBOARD_FILE):
     with open(LEADERBOARD_FILE, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "points"])
+        writer.writerow(["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date"])
 
 @app.route("/upload_waste_report", methods=["POST"])
 def upload_waste_report():
@@ -220,34 +222,33 @@ def upload_waste_report():
         if not required_cols.issubset(df.columns):
             return jsonify({"success": False, "error": "Missing required columns."})
 
-        # ✅ Convert date to d-m-Y and then to datetime.date
-        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce").dt.strftime("%d-%m-%Y")
 
-        # ✅ Calculate reward points
-        df["points"] = df["waste_donated_kg"] * 10 + df["waste_reduced_kg"] * 5 - df["waste_generated_kg"] * 2
-
-        # ✅ Append to CSV
+        # Append to CSV (points will be auto-calculated later)
         df.to_csv(LEADERBOARD_FILE, mode='a', index=False, header=False)
 
-        return jsonify({"success": True, "message": "Report uploaded successfully!"})
+        return jsonify({"success": True, "message": "Waste report uploaded successfully!"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+def calculate_points(df):
+    df["points"] = df["waste_donated_kg"] * 10 + df["waste_reduced_kg"] * 5 - df["waste_generated_kg"] * 2
+    return df
 
 @app.route("/daily_leaderboard", methods=["GET"])
 def daily_leaderboard():
     try:
         df = pd.read_csv(LEADERBOARD_FILE)
-        df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce").dt.date
-
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce").dt.date
         today = datetime.today().date()
         daily = df[df["date"] == today]
+        if daily.empty:
+            return jsonify([])
+
+        daily = calculate_points(daily)
 
         daily_sorted = daily.sort_values("points", ascending=False).reset_index(drop=True)
-        badges = ["🥇", "🥈", "🥉"]
-        daily_sorted["badge"] = [""] * len(daily_sorted)
-        for i in range(min(3, len(daily_sorted))):
-            daily_sorted.at[i, "badge"] = badges[i]
-
+        daily_sorted["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily_sorted) - 3)
         daily_sorted["date"] = daily_sorted["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
 
         return jsonify(daily_sorted.to_dict(orient="records"))
@@ -258,12 +259,16 @@ def daily_leaderboard():
 def monthly_leaderboard():
     try:
         df = pd.read_csv(LEADERBOARD_FILE)
-        df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce").dt.date
-
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce").dt.date
         today = datetime.today()
-        df = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
+        this_month = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
 
-        monthly = df.groupby("store_location").agg({
+        if this_month.empty:
+            return jsonify([])
+
+        this_month = calculate_points(this_month)
+
+        monthly = this_month.groupby("store_location").agg({
             "waste_donated_kg": "sum",
             "waste_reduced_kg": "sum",
             "waste_generated_kg": "sum",
@@ -271,7 +276,7 @@ def monthly_leaderboard():
         }).reset_index()
 
         monthly = monthly.sort_values("points", ascending=False).reset_index(drop=True)
-        monthly["badge"] = ["🏆 Monthly Winner"] + [""] * (len(monthly) - 1)
+        monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
 
         return jsonify(monthly.to_dict(orient="records"))
     except Exception as e:
