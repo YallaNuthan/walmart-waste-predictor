@@ -6,7 +6,6 @@ import os
 import pandas as pd
 from datetime import datetime
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -30,24 +29,40 @@ def upload_csv():
         if not required_columns.issubset(df.columns):
             return jsonify({"success": False, "error": "Missing one or more required columns."})
 
-        # Convert expiry_date and calculate days_to_expiry
+        # ✅ Fix: Safely parse expiry_date
+        df["expiry_date"] = pd.to_datetime(df["expiry_date"], format="%d-%m-%Y", errors='coerce')
         today = datetime.today().date()
-        df["expiry_date"] = pd.to_datetime(df["expiry_date"], errors='coerce')
-        df["days_to_expiry"] = (df["expiry_date"].dt.date - today).dt.days
 
-        # Simple expiry risk logic
+        # ✅ Fix: Safely compute days_to_expiry
+        df["days_to_expiry"] = df["expiry_date"].apply(
+            lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
+        )
+
+        # Label expiry status
+        def label_expiry_status(days):
+            if pd.isna(days):
+                return "Invalid Date"
+            elif days < 0:
+                return "Already Expired"
+            else:
+                return f"{days} day(s) left"
+        df["expiry_status"] = df["days_to_expiry"].apply(label_expiry_status)
+
+        # Risk logic
         df["expiry_risk"] = df.apply(
             lambda row: 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0,
             axis=1
         )
 
-        # Simple recommendation logic
+        # Recommendation logic
         df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-        # Return filtered response
+        # Format expiry_date for display
+        df["expiry_date"] = df["expiry_date"].dt.strftime("%d-%m-%Y")
+
         output = df[[
             "product_id", "name", "store_location", "category", "stock", "freshness_score",
-            "days_to_expiry", "expiry_risk", "recommendation"
+            "expiry_date", "expiry_status", "days_to_expiry", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
         return jsonify({"success": True, "data": output})
@@ -63,7 +78,6 @@ def predict():
         prediction = model.predict([query])[0]
         label = "High Risk" if prediction == 1 else "Low Risk"
         return jsonify({'prediction': label})
-
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -109,14 +123,11 @@ def recommend_action():
         return jsonify({'error': str(e)})
 
 # ✅ Real data processing logic
-
 def generate_recommendations():
-    # Step 1: Load all datasets
     inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
     demand = pd.read_csv("data/store_demand.csv", sep="\t")
     distance = pd.read_csv("data/store_distance.csv", sep="\t")
 
-    # Step 2: Safe parse expiry_date
     def safe_parse_date(x):
         try:
             return datetime.strptime(x, "%d-%m-%Y")
@@ -124,15 +135,11 @@ def generate_recommendations():
             return pd.NaT
 
     inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
-
-
-    # Step 3: Compute days_to_expiry
     today = datetime.today().date()
     inventory["days_to_expiry"] = inventory["expiry_date"].apply(
         lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
     )
 
-    # Step 4: Label expiry status
     def label_expiry_status(days):
         if pd.isna(days):
             return "Invalid Date"
@@ -140,28 +147,19 @@ def generate_recommendations():
             return "Already Expired"
         else:
             return f"{days} day(s) left"
-
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
-
-    # Step 5: Format expiry_date for display
     inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
 
-    # Step 6: Merge with demand data
     merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
-
-    # Step 7: Label expiry risk
     merged["expiry_risk"] = merged["days_to_expiry"].apply(lambda d: 1 if pd.notna(d) and d <= 1 else 0)
 
-    # Step 8: Define recommendation logic
     def recommend_transfer(row):
         from_store = row["store_location"]
         product_id = row["product_id"]
         required_demand = row["daily_demand"]
-
         nearby = distance[distance["from_store"] == from_store]
         best_store = None
         min_distance = float("inf")
-
         for _, d in nearby.iterrows():
             to_store = d["to_store"]
             dist = d["distance_km"]
@@ -169,29 +167,23 @@ def generate_recommendations():
             if not match.empty and match.iloc[0]["daily_demand"] > required_demand and dist < min_distance:
                 best_store = to_store
                 min_distance = dist
-
         return best_store if best_store else "Keep in Stock"
 
-    # Step 9: Apply recommendation based on risk
     merged["recommendation"] = merged.apply(
         lambda row: "Donate" if row["expiry_risk"] else recommend_transfer(row),
         axis=1
     )
 
-    # Step 10: Return final columns
     return merged[[
         "product_id", "name", "store_location", "category", "stock", "freshness_score",
         "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
     ]].to_dict(orient="records")
 
-
-# ✅ Register the smart recommendation route
 @app.route("/bulk_recommendations", methods=["GET"])
 def bulk_recommendations():
     data = generate_recommendations()
     return jsonify(data)
 
-# ✅ Run Flask server
 if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
