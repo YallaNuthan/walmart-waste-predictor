@@ -354,7 +354,14 @@
       });
       const result = await res.json();
       spinner.style.display = "none";
-      resultBox.innerText = result.prediction !== undefined ? `Prediction: ${result.prediction}` : `Error: ${result.error}`;
+      if (result.prediction !== undefined) {
+        resultBox.innerText = `Prediction: ${result.prediction}`;
+        resultBox.style.color = result.prediction === "High Risk" ? "red" : "green";
+      } else {
+        resultBox.innerText = `Error: ${result.error}`;
+        resultBox.style.color = "black";
+      }
+
     });
 
     // Recommendation
