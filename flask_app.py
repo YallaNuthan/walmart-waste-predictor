@@ -110,11 +110,9 @@ def recommend_action():
 
 # ✅ Real data processing logic
 def generate_recommendations():
-    
+    inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
     demand = pd.read_csv("data/store_demand.csv", sep='\t')
     distance = pd.read_csv("data/store_distance.csv", sep='\t')
-
-    
 
     def safe_parse_date(x):
         try:
@@ -122,17 +120,13 @@ def generate_recommendations():
         except:
             return pd.NaT
 
-# Inside generate_recommendations()
-    inventory = pd.read_csv("data/product_inventory.csv", sep='\t')
-
-# ✅ Safely parse expiry_date column
     inventory["expiry_date"] = inventory["expiry_date"].astype(str).apply(safe_parse_date)
 
-# ✅ Compute days_to_expiry only for valid dates
+# Step 4: Calculate days_to_expiry
     today = datetime.today().date()
-    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).dt.days
+    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).astype("Int64")
 
-# ✅ Label expiry status
+# Step 5: Label status
     def label_expiry_status(days):
         if pd.isna(days):
             return "Invalid Date"
@@ -142,6 +136,11 @@ def generate_recommendations():
             return f"{days} day(s) left"
 
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
+
+# Step 6 (optional): Format expiry_date for table display
+    inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
+
+  
 
 
     def recommend_transfer(row):
