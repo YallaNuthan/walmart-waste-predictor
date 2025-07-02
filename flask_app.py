@@ -110,23 +110,31 @@ def recommend_action():
 
 # ✅ Real data processing logic
 def generate_recommendations():
-    inventory = pd.read_csv("data/product_inventory.csv", sep='\t')
+    
     demand = pd.read_csv("data/store_demand.csv", sep='\t')
     distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
-    today = datetime.today().date()
-    inventory["expiry_date"] = inventory["expiry_date"].astype(str)
-    def calculate_days_left(date_str):
+    
+
+    def safe_parse_date(x):
         try:
-            expiry = datetime.strptime(date_str.strip(), "%d-%m-%Y").date()
-            return (expiry - today).days
-        except Exception:
-            return None
+            return datetime.strptime(x, "%d-%m-%Y")
+        except:
+            return pd.NaT
 
-    inventory["days_to_expiry"] = inventory["expiry_date"].apply(calculate_days_left)
+# Inside generate_recommendations()
+    inventory = pd.read_csv("data/product_inventory.csv", sep='\t')
 
+# ✅ Safely parse expiry_date column
+    inventory["expiry_date"] = inventory["expiry_date"].astype(str).apply(safe_parse_date)
+
+# ✅ Compute days_to_expiry only for valid dates
+    today = datetime.today().date()
+    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).dt.days
+
+# ✅ Label expiry status
     def label_expiry_status(days):
-        if days is None:
+        if pd.isna(days):
             return "Invalid Date"
         elif days < 0:
             return "Already Expired"
@@ -135,7 +143,6 @@ def generate_recommendations():
 
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
 
-    
 
     def recommend_transfer(row):
         from_store = row["store_location"]
