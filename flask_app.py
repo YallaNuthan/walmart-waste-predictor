@@ -18,6 +18,42 @@ demand_model = joblib.load("demand_model.pkl")
 def home():
     return "Walmart Waste Predictor API is running!"
 
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
+
+        # Validate required columns
+        required_columns = {"product_id", "name", "category", "stock", "expiry_date", "store_location", "freshness_score"}
+        if not required_columns.issubset(df.columns):
+            return jsonify({"success": False, "error": "Missing one or more required columns."})
+
+        # Convert expiry_date and calculate days_to_expiry
+        today = datetime.today().date()
+        df["expiry_date"] = pd.to_datetime(df["expiry_date"], errors='coerce')
+        df["days_to_expiry"] = (df["expiry_date"].dt.date - today).dt.days
+
+        # Simple expiry risk logic
+        df["expiry_risk"] = df.apply(
+            lambda row: 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0,
+            axis=1
+        )
+
+        # Simple recommendation logic
+        df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
+
+        # Return filtered response
+        output = df[[
+            "product_id", "name", "store_location", "category", "stock", "freshness_score",
+            "days_to_expiry", "expiry_risk", "recommendation"
+        ]].to_dict(orient="records")
+
+        return jsonify({"success": True, "data": output})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
