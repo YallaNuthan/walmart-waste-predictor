@@ -114,30 +114,28 @@ def generate_recommendations():
     demand = pd.read_csv("data/store_demand.csv", sep='\t')
     distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
-    # Use ISO format "%Y-%m-%d" if CSV has "2025-07-04" style dates
-    
-    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
-    inventory = inventory.dropna(subset=["expiry_date"])
-
-# Step 2: Calculate days_to_expiry
     today = datetime.today().date()
-    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).dt.days
 
-# Step 3: Add human-readable status
+    def calculate_days_left(date_str):
+        try:
+            expiry = datetime.strptime(date_str, "%d-%m-%Y").date()
+            return (expiry - today).days
+        except Exception:
+            return None
+
+    inventory["days_to_expiry"] = inventory["expiry_date"].apply(calculate_days_left)
+
     def label_expiry_status(days):
-        return "Already Expired" if days < 0 else f"{days} day(s)"
+        if days is None:
+            return "Invalid Date"
+        elif days < 0:
+            return "Already Expired"
+        else:
+            return f"{days} day(s) left"
 
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
-    inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
+
     
-    
-
-    merged = pd.merge(inventory, demand, how='left', on=["product_id", "store_location"])
-
-    def classify_risk(row):
-        return 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0
-
-    merged["expiry_risk"] = merged.apply(classify_risk, axis=1)
 
     def recommend_transfer(row):
         from_store = row["store_location"]
