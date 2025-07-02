@@ -122,8 +122,8 @@ def generate_recommendations():
     inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).dt.days
 
 # Step 3: Add human-readable status
-   def label_expiry_status(days):
-       return "Already Expired" if days < 0 else f"{days} day(s)"
+    def label_expiry_status(days):
+        return "Already Expired" if days < 0 else f"{days} day(s)"
 
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
     inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
