@@ -29,40 +29,28 @@ def upload_csv():
         if not required_columns.issubset(df.columns):
             return jsonify({"success": False, "error": "Missing one or more required columns."})
 
-        # ✅ Fix: Safely parse expiry_date
-        df["expiry_date"] = pd.to_datetime(df["expiry_date"], format="%d-%m-%Y", errors='coerce')
+        # Convert expiry_date and calculate days_to_expiry
         today = datetime.today().date()
-
-        # ✅ Fix: Safely compute days_to_expiry
-        df["days_to_expiry"] = df["expiry_date"].apply(
-            lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
+        df["expiry_date"] = pd.to_datetime(df["expiry_date"], errors='coerce')
+        df["days_to_expiry"] = (df["expiry_date"].dt.date - today).apply(
+            lambda x: x.days if pd.notna(x) else pd.NA
         )
 
-        # Label expiry status
-        def label_expiry_status(days):
-            if pd.isna(days):
-                return "Invalid Date"
-            elif days < 0:
-                return "Already Expired"
-            else:
-                return f"{days} day(s) left"
-        df["expiry_status"] = df["days_to_expiry"].apply(label_expiry_status)
+        # ✅ Safe expiry risk logic
+        def check_expiry_risk(row):
+            if pd.isna(row["days_to_expiry"]) or pd.isna(row["freshness_score"]):
+                return 0
+            return 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0
 
-        # Risk logic
-        df["expiry_risk"] = df.apply(
-            lambda row: 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0,
-            axis=1
-        )
+        df["expiry_risk"] = df.apply(check_expiry_risk, axis=1)
 
-        # Recommendation logic
+        # Simple recommendation logic
         df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-        # Format expiry_date for display
-        df["expiry_date"] = df["expiry_date"].dt.strftime("%d-%m-%Y")
-
+        # Return filtered response
         output = df[[
             "product_id", "name", "store_location", "category", "stock", "freshness_score",
-            "expiry_date", "expiry_status", "days_to_expiry", "expiry_risk", "recommendation"
+            "days_to_expiry", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
         return jsonify({"success": True, "data": output})
@@ -122,7 +110,6 @@ def recommend_action():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# ✅ Real data processing logic
 def generate_recommendations():
     inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
     demand = pd.read_csv("data/store_demand.csv", sep="\t")
@@ -135,6 +122,7 @@ def generate_recommendations():
             return pd.NaT
 
     inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
+
     today = datetime.today().date()
     inventory["days_to_expiry"] = inventory["expiry_date"].apply(
         lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
@@ -147,6 +135,7 @@ def generate_recommendations():
             return "Already Expired"
         else:
             return f"{days} day(s) left"
+
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
     inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
 
@@ -157,9 +146,11 @@ def generate_recommendations():
         from_store = row["store_location"]
         product_id = row["product_id"]
         required_demand = row["daily_demand"]
+
         nearby = distance[distance["from_store"] == from_store]
         best_store = None
         min_distance = float("inf")
+
         for _, d in nearby.iterrows():
             to_store = d["to_store"]
             dist = d["distance_km"]
@@ -167,6 +158,7 @@ def generate_recommendations():
             if not match.empty and match.iloc[0]["daily_demand"] > required_demand and dist < min_distance:
                 best_store = to_store
                 min_distance = dist
+
         return best_store if best_store else "Keep in Stock"
 
     merged["recommendation"] = merged.apply(
