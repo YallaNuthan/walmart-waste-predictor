@@ -124,7 +124,8 @@ def generate_recommendations():
 
 # Step 4: Calculate days_to_expiry
     today = datetime.today().date()
-    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).astype("Int64")
+    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).apply(lambda x: x.days if pd.notna(x) else pd.NA)
+
 
 # Step 5: Label status
     def label_expiry_status(days):
