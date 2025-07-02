@@ -109,11 +109,14 @@ def recommend_action():
         return jsonify({'error': str(e)})
 
 # ✅ Real data processing logic
-def generate_recommendations():
-    inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
-    demand = pd.read_csv("data/store_demand.csv", sep='\t')
-    distance = pd.read_csv("data/store_distance.csv", sep='\t')
 
+def generate_recommendations():
+    # Step 1: Load all datasets
+    inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
+    demand = pd.read_csv("data/store_demand.csv", sep="\t")
+    distance = pd.read_csv("data/store_distance.csv", sep="\t")
+
+    # Step 2: Safe parse expiry_date
     def safe_parse_date(x):
         try:
             return datetime.strptime(x, "%d-%m-%Y")
@@ -122,12 +125,13 @@ def generate_recommendations():
 
     inventory["expiry_date"] = inventory["expiry_date"].astype(str).apply(safe_parse_date)
 
-# Step 4: Calculate days_to_expiry
+    # Step 3: Compute days_to_expiry
     today = datetime.today().date()
-    inventory["days_to_expiry"] = (inventory["expiry_date"].dt.date - today).apply(lambda x: x.days if pd.notna(x) else pd.NA)
+    inventory["days_to_expiry"] = inventory["expiry_date"].apply(
+        lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
+    )
 
-
-# Step 5: Label status
+    # Step 4: Label expiry status
     def label_expiry_status(days):
         if pd.isna(days):
             return "Invalid Date"
@@ -138,22 +142,26 @@ def generate_recommendations():
 
     inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
 
-# Step 6 (optional): Format expiry_date for table display
+    # Step 5: Format expiry_date for display
     inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
 
-  
+    # Step 6: Merge with demand data
+    merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
 
+    # Step 7: Label expiry risk
+    merged["expiry_risk"] = merged["days_to_expiry"].apply(lambda d: 1 if pd.notna(d) and d <= 1 else 0)
 
+    # Step 8: Define recommendation logic
     def recommend_transfer(row):
         from_store = row["store_location"]
         product_id = row["product_id"]
         required_demand = row["daily_demand"]
 
-        options = distance[distance["from_store"] == from_store]
+        nearby = distance[distance["from_store"] == from_store]
         best_store = None
         min_distance = float("inf")
 
-        for _, d in options.iterrows():
+        for _, d in nearby.iterrows():
             to_store = d["to_store"]
             dist = d["distance_km"]
             match = demand[(demand["store_location"] == to_store) & (demand["product_id"] == product_id)]
@@ -163,20 +171,13 @@ def generate_recommendations():
 
         return best_store if best_store else "Keep in Stock"
 
+    # Step 9: Apply recommendation based on risk
     merged["recommendation"] = merged.apply(
         lambda row: "Donate" if row["expiry_risk"] else recommend_transfer(row),
         axis=1
     )
 
-    # Add expiry_status column first
-    merged["expiry_status"] = merged["days_to_expiry"].apply(
-        lambda d: "Already Expired" if d < 0 else f"{d} day(s)"
-    )
-
-# Format expiry_date (optional but nice)
-    merged["expiry_date"] = merged["expiry_date"].dt.strftime("%d-%m-%Y")
-
-# Then return this
+    # Step 10: Return final columns
     return merged[[
         "product_id", "name", "store_location", "category", "stock", "freshness_score",
         "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
