@@ -269,6 +269,12 @@
 
     <div class="table-container">
       <h2 style="text-align:center">📊 Smart Bulk Recommendations</h2>
+<div style="margin-bottom: 20px;">
+  <label><strong>Upload Custom CSV (Required Columns: product_id, name, category, stock, expiry_date, store_location, freshness_score)</strong></label>
+  <input type="file" id="csvInput" accept=".csv" />
+  <button onclick="uploadCSV()">📤 Upload & Analyze</button>
+</div>
+
       <button onclick="loadRecommendations()">🔄 Load Recommendations</button>
       <table id="recommendationTable">
         <thead>
@@ -435,6 +441,34 @@
       currentPage = 1;
       renderPage(currentPage);
     }
+
+    async function uploadCSV() {
+  const fileInput = document.getElementById('csvInput');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Please select a CSV file first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${BASE_URL}/upload_csv`, {
+    method: 'POST',
+    body: formData
+  });
+
+  const result = await res.json();
+  if (result.success) {
+    allData = result.data;
+    currentPage = 1;
+    renderPage(currentPage);
+  } else {
+    alert("❌ Upload failed: " + result.error);
+  }
+}
+
   </script>
 </body>
 </html>
