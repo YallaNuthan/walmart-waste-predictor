@@ -173,6 +173,60 @@
       background: #007bff;
       color: white;
     }
+
+    #dailyTable, #monthlyTable {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+#dailyTable th, #monthlyTable th,
+#dailyTable td, #monthlyTable td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+#dailyTable th, #monthlyTable th {
+  background-color: #007bff;
+  color: white;
+}
+
+#dailyTable tr:nth-child(even),
+#monthlyTable tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+#dailyTable tr:hover,
+#monthlyTable tr:hover {
+  background-color: #e2e6ea;
+  cursor: default;
+}
+
+/* Badge styling (optional emphasis) */
+td:contains("🥇") {
+  color: gold;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+td:contains("🥈") {
+  color: silver;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+td:contains("🥉") {
+  color: #cd7f32;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+td:contains("🏆") {
+  color: green;
+  font-weight: bold;
+  font-size: 20px;
+}
   </style>
 </head>
 <body>
@@ -182,6 +236,8 @@
     <button onclick="showPage('page1')">Page 1: Demand Forecast</button>
     <button onclick="showPage('page2')">Page 2: Waste Risk</button>
     <button onclick="showPage('page3')">Page 3: Recommendations</button>
+    <button onclick="showPage('page4')">Page 4: Leaderboard</button>
+
   </div>
 
   <!-- Page 1 -->
@@ -295,6 +351,27 @@
       <div class="pagination" id="paginationControls"></div>
     </div>
   </div>
+<!-- page 4 -->
+  <div id="page4" class="page">
+  <div class="container">
+    <h2>📤 Upload Waste Report CSV</h2>
+    <form id="wasteUploadForm">
+      <input type="file" name="file" required />
+      <button type="submit">Upload</button>
+    </form>
+    <div id="uploadMessage" class="result"></div>
+  </div>
+
+  <div class="container">
+    <h2>🏅 Daily Leaderboard</h2>
+    <table id="dailyTable"><thead></thead><tbody></tbody></table>
+  </div>
+
+  <div class="container">
+    <h2>🏆 Monthly Leaderboard</h2>
+    <table id="monthlyTable"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
 
   <!-- Script -->
   <script>
@@ -474,6 +551,65 @@
   } else {
     alert("❌ Upload failed: " + result.error);
   }
+}
+
+document.getElementById("wasteUploadForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const formData = new FormData();
+  const fileInput = e.target.file;
+  formData.append("file", fileInput.files[0]);
+
+  const res = await fetch(`${BASE_URL}/upload_waste_report`, {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await res.json();
+  document.getElementById("uploadMessage").innerText = result.message || result.error;
+  loadLeaderboards(); // reload after upload
+});
+
+// Load Leaderboards
+async function loadLeaderboards() {
+  const daily = await fetch(`${BASE_URL}/daily_leaderboard`).then(r => r.json());
+  const monthly = await fetch(`${BASE_URL}/monthly_leaderboard`).then(r => r.json());
+
+  function renderTable(data, tableId) {
+    const table = document.getElementById(tableId);
+    if (!data || data.length === 0) {
+      table.innerHTML = "<tr><td>No data</td></tr>";
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    table.querySelector("thead").innerHTML =
+      "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+    table.querySelector("tbody").innerHTML =
+      data.map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>`).join("");
+  }
+
+  renderTable(daily, "dailyTable");
+  renderTable(monthly, "monthlyTable");
+}
+function renderTable(data, tableId) {
+  const table = document.getElementById(tableId);
+  if (!data || data.length === 0) {
+    table.innerHTML = "<tr><td>No data</td></tr>";
+    return;
+  }
+
+  const headers = Object.keys(data[0]);
+  table.querySelector("thead").innerHTML =
+    "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+
+  table.querySelector("tbody").innerHTML = data.map((row, index) => {
+    let bgColor = "";
+    if (row.badge === "🥇") bgColor = "style='background-color: #fff8dc;'";
+    else if (row.badge === "🥈") bgColor = "style='background-color: #f0f0f0;'";
+    else if (row.badge === "🥉") bgColor = "style='background-color: #f9f5f0;'";
+
+    return `<tr ${bgColor}>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>`;
+  }).join("");
 }
 
   </script>
