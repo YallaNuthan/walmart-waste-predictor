@@ -123,7 +123,8 @@ def generate_recommendations():
         except:
             return pd.NaT
 
-    inventory["expiry_date"] = inventory["expiry_date"].astype(str).apply(safe_parse_date)
+    inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
+
 
     # Step 3: Compute days_to_expiry
     today = datetime.today().date()
