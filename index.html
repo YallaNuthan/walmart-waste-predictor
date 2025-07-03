@@ -12,6 +12,7 @@
       margin: 0;
       padding: 0;
     }
+
     .sidebar {
       height: 100%;
       width: 250px;
@@ -24,6 +25,7 @@
       padding-top: 60px;
       z-index: 1000;
     }
+
     .sidebar a {
       padding: 16px 24px;
       text-decoration: none;
@@ -31,9 +33,11 @@
       color: #fff;
       display: block;
     }
+
     .sidebar a:hover {
       background-color: #0050c2;
     }
+
     .openbtn {
       font-size: 24px;
       cursor: pointer;
@@ -46,11 +50,38 @@
       left: 10px;
       z-index: 1100;
     }
+
+    .bell-icon {
+      position: fixed;
+      top: 14px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1100;
+    }
+
+    .alert-box {
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 16px;
+      display: none;
+      z-index: 1200;
+    }
+
     #main {
       transition: margin-left 0.3s;
       padding: 20px;
       margin-left: 0;
     }
+
     .container, .table-container {
       background-color: white;
       border-radius: 10px;
@@ -59,12 +90,15 @@
       max-width: 1100px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
     h2 { text-align: center; color: #003087; }
+
     label {
       display: block;
       margin: 10px 0 6px;
       font-weight: bold;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
@@ -73,6 +107,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
       background-color: #0071ce;
       color: white;
@@ -82,32 +117,45 @@
       font-size: 16px;
       cursor: pointer;
     }
+
     button:hover { background-color: #005bbb; }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
+
     th, td {
       border: 1px solid #ddd;
       padding: 12px;
       text-align: center;
     }
+
     th {
       background-color: #0071ce;
       color: white;
     }
+
     tr:nth-child(even) { background-color: #f2f2f2; }
 
     .result { margin-top: 12px; font-weight: bold; }
+
     .page { display: none; }
     .active { display: block; }
+
     .welcome {
       text-align: center;
       margin-top: 100px;
       font-size: 26px;
       color: #003087;
       padding: 0 20px;
+    }
+
+    .alert-item {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -123,6 +171,9 @@
 
 <!-- Hamburger Icon -->
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
+<!-- Bell Icon -->
+<div class="bell-icon" onclick="toggleAlerts()">🔔</div>
+<div id="alertBox" class="alert-box"></div>
 
 <div id="main">
   <div id="welcome" class="welcome">
@@ -232,6 +283,7 @@ function navigate(id) {
   document.getElementById(id).classList.add("active");
   document.getElementById("welcome").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
+  document.getElementById("alertBox").style.display = "none";
 }
 
 document.getElementById("forecastForm").onsubmit = async e => {
@@ -249,6 +301,31 @@ document.getElementById("forecastForm").onsubmit = async e => {
   const data = await res.json();
   document.getElementById("forecastResult").innerText = data.forecasted_demand !== undefined
     ? `📊 Forecasted Demand: ${data.forecasted_demand}` : `❌ Error: ${data.error}`;
+};
+
+document.getElementById("predictForm").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target;
+  const category = f.category.value;
+  const payload = {
+    shelf_life_days: +f.shelf_life_days.value,
+    current_stock: +f.current_stock.value,
+    sold_last_7_days: +f.sold_last_7_days.value,
+    forecasted_demand: +f.forecasted_demand.value,
+    temperature_C: +f.temperature_C.value,
+    humidity_percent: +f.humidity_percent.value,
+    category_Dairy: category === "Dairy" ? 1 : 0,
+    category_Fruit: category === "Fruit" ? 1 : 0,
+    category_Meat: category === "Meat" ? 1 : 0,
+    category_Vegetable: category === "Vegetable" ? 1 : 0
+  };
+  const res = await fetch(`${BASE}/predict`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const result = await res.json();
+  document.getElementById("predictResult").innerText = result.prediction ? `Risk: ${result.prediction}` : `Error: ${result.error}`;
 };
 
 async function uploadCSV() {
@@ -330,6 +407,24 @@ async function loadByDate() {
       <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
       <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
   });
+}
+
+async function toggleAlerts() {
+  const box = document.getElementById("alertBox");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+  if (box.style.display === "block") {
+    const res = await fetch(`${BASE}/critical_alerts`);
+    const alerts = await res.json();
+    box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
+    if (!alerts.length) {
+      box.innerHTML += "<p>No critical alerts!</p>";
+    } else {
+      alerts.forEach(alert => {
+        box.innerHTML += `<div class="alert-item">📍 <b>${alert.name}</b> at ${alert.store_location} <br>
+        Stock: ${alert.stock}, Demand: ${alert.daily_demand}, Expiry: ${alert.expiry_date}</div>`;
+      });
+    }
+  }
 }
 </script>
 </body>
