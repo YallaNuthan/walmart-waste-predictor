@@ -203,7 +203,82 @@ def bulk_recommendations():
     return jsonify(data)
 
 # ===================== Leaderboard Functionality ==========================
+# Load the AI score model
+ai_model = joblib.load("ai_score_model.pkl")
+LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 
+# Ensure leaderboard file exists
+if not os.path.exists(LEADERBOARD_FILE):
+    pd.DataFrame(columns=[
+        "store_location", "waste_donated_kg", "waste_reduced_kg",
+        "waste_generated_kg", "date", "ai_score"
+    ]).to_csv(LEADERBOARD_FILE, index=False)
+
+# 🧾 Upload store waste report + generate AI Score
+@app.route("/upload_waste_ai", methods=["POST"])
+def upload_waste_ai():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
+
+        required = {"store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date"}
+        if not required.issubset(df.columns):
+            return jsonify({"success": False, "error": "Missing required columns."})
+
+        # Format date
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
+
+        # Predict AI Score
+        X = df[["waste_donated_kg", "waste_reduced_kg", "waste_generated_kg"]]
+        df["ai_score"] = ai_model.predict(X).round(2)
+
+        # Append to file
+        df.to_csv(LEADERBOARD_FILE, mode="a", index=False, header=False)
+        return jsonify({"success": True, "message": "Report uploaded with AI scores!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+# 📅 Daily leaderboard
+@app.route("/ai_daily_leaderboard", methods=["GET"])
+def ai_daily_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+
+        today = datetime.today().date()
+        daily = df[df["date"] == today]
+
+        top3 = daily.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        top3["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(top3) - 3)
+
+        top3["date"] = top3["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
+        return jsonify(top3.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# 📆 Monthly leaderboard
+@app.route("/ai_monthly_leaderboard", methods=["GET"])
+def ai_monthly_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+
+        today = datetime.today()
+        df = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
+
+        monthly = df.groupby("store_location").agg({
+            "waste_donated_kg": "sum",
+            "waste_reduced_kg": "sum",
+            "waste_generated_kg": "sum",
+            "ai_score": "mean"
+        }).reset_index()
+
+        monthly = monthly.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
+
+        return jsonify(monthly.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 
