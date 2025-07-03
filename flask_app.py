@@ -6,7 +6,6 @@ import os
 import pandas as pd
 from datetime import datetime
 import csv
-from sklearn.linear_model import LinearRegression
 
 app = Flask(__name__)
 CORS(app)
@@ -33,9 +32,7 @@ def upload_csv():
 
         today = datetime.today().date()
         df["expiry_date"] = pd.to_datetime(df["expiry_date"], errors='coerce')
-        df["days_to_expiry"] = df["expiry_date"].apply(
-            lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
-        )
+        df["days_to_expiry"] = df["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
 
         def check_expiry_risk(row):
             if pd.isna(row["days_to_expiry"]) or pd.isna(row["freshness_score"]):
@@ -128,9 +125,7 @@ def bulk_recommendations():
 
         inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
         today = datetime.today().date()
-        inventory["days_to_expiry"] = inventory["expiry_date"].apply(
-            lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
-        )
+        inventory["days_to_expiry"] = inventory["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
 
         def label_expiry_status(days):
             if pd.isna(days):
@@ -178,7 +173,36 @@ def bulk_recommendations():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# ==================== AI Leaderboard =========================
+# ✅ Smart Alerts Endpoint
+@app.route("/critical_alerts", methods=["GET"])
+def critical_alerts():
+    try:
+        inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
+        demand = pd.read_csv("data/store_demand.csv", sep="\t")
+
+        today = datetime.today().date()
+        inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors='coerce')
+        inventory["days_to_expiry"] = inventory["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
+
+        merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
+
+        alerts = merged[
+            (merged["days_to_expiry"] < 1) |
+            ((merged["stock"] > 50) & (merged["daily_demand"] < 10))
+        ]
+
+        result = alerts[[
+            "product_id", "name", "store_location", "category", "stock",
+            "expiry_date", "daily_demand", "days_to_expiry"
+        ]].copy()
+
+        result["expiry_date"] = result["expiry_date"].dt.strftime("%d-%m-%Y")
+
+        return jsonify(result.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# ==================== AI Leaderboard Routes =========================
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
     pd.DataFrame(columns=[
@@ -240,7 +264,6 @@ def ai_monthly_leaderboard():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# ✅ NEW: Leaderboard by Specific Date (for calendar UI)
 @app.route("/ai_leaderboard_by_date", methods=["GET"])
 def ai_leaderboard_by_date():
     try:
