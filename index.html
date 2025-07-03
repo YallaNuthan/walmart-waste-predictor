@@ -211,7 +211,7 @@
       <label>Temperature (°C)</label>
       <input name="temperature_C" type="number" required />
       <label>Humidity (%)</label>
-      <input name="humidity_percent" type="number" required />
+      <input name="humidity_%" type="number" required />
       <label>Category</label>
       <select name="category">
         <option>Fruit</option><option>Meat</option>
@@ -313,7 +313,7 @@ document.getElementById("predictForm").onsubmit = async e => {
     sold_last_7_days: +f.sold_last_7_days.value,
     forecasted_demand: +f.forecasted_demand.value,
     temperature_C: +f.temperature_C.value,
-    humidity_percent: +f.humidity_percent.value,
+    "humidity_%": +f.["humidity_%"].value,
     category_Dairy: category === "Dairy" ? 1 : 0,
     category_Fruit: category === "Fruit" ? 1 : 0,
     category_Meat: category === "Meat" ? 1 : 0,
