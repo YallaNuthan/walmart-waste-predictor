@@ -14,7 +14,6 @@
       flex-direction: column;
       align-items: center;
     }
-
     .nav-buttons {
       display: flex;
       justify-content: center;
@@ -30,11 +29,9 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     .nav-buttons button:hover {
       background-color: #0056b3;
     }
-
     .container {
       background-color: white;
       border-radius: 12px;
@@ -44,7 +41,6 @@
       width: 90%;
       max-width: 600px;
     }
-
     .page {
       display: none;
       width: 100%;
@@ -52,20 +48,17 @@
     .page.active {
       display: block;
     }
-
     h2 {
       text-align: center;
       color: #333;
       margin-bottom: 24px;
     }
-
     label {
       display: block;
       margin: 12px 0 6px;
       font-weight: bold;
       color: #444;
     }
-
     input, select {
       width: 100%;
       padding: 10px;
@@ -74,7 +67,6 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-
     button[type="submit"] {
       width: 100%;
       padding: 12px;
@@ -85,11 +77,9 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     button[type="submit"]:hover {
       background-color: #0056b3;
     }
-
     .result {
       margin-top: 20px;
       padding: 10px;
@@ -99,15 +89,12 @@
       font-size: 18px;
       background-color: #f9f9f9;
     }
-
     .spinner {
       display: none;
       text-align: center;
       font-style: italic;
       color: #999;
     }
-
-    /* Smart Table */
     .table-container {
       background-color: white;
       padding: 30px;
@@ -116,50 +103,41 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       padding: 10px;
       text-align: center;
       border: 1px solid #ddd;
     }
-
     th {
       background-color: #007bff;
       color: white;
     }
-
     tr:nth-child(even) {
       background-color: #f8f9fa;
     }
-
     .Donate {
       color: red;
       font-weight: bold;
     }
-
     .Transfer {
       color: orange;
       font-weight: bold;
     }
-
     .Keep {
       color: green;
       font-weight: bold;
     }
-
     .pagination {
       margin-top: 20px;
       display: flex;
       gap: 10px;
       justify-content: center;
     }
-
     .pagination button {
       padding: 8px 16px;
       border: 1px solid #007bff;
@@ -168,98 +146,34 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     .pagination button.active {
       background: #007bff;
       color: white;
     }
-
-
   </style>
 </head>
 <body>
 
-  <!-- Navigation -->
   <div class="nav-buttons">
     <button onclick="showPage('page1')">Page 1: Demand Forecast</button>
     <button onclick="showPage('page2')">Page 2: Waste Risk</button>
     <button onclick="showPage('page3')">Page 3: Recommendations</button>
     <button onclick="showPage('page4')">Page 4: Leaderboard</button>
-
   </div>
 
-  <!-- Page 1 -->
-  <div id="page1" class="page active">
-    <div class="container">
-      <h2>📈 Demand Forecast</h2>
-      <div id="forecastResult" class="result"></div>
-      <div id="forecastSpinner" class="spinner">⏳ Loading...</div>
-      <form id="forecastForm">
-        <label>Previous Sales</label>
-        <input type="number" name="previous_sales" required />
-        <label>Current Stock</label>
-        <input type="number" name="stock" required />
-        <label>Temperature (°C)</label>
-        <input type="number" name="temperature_C" required />
-        <button type="submit">Forecast Demand</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Page 2 -->
-  <div id="page2" class="page">
-    <div class="container">
-      <h2>🗑 Waste Risk Prediction</h2>
-      <div id="predictResult" class="result"></div>
-      <div id="predictSpinner" class="spinner">⏳ Loading...</div>
-      <form id="predictForm">
-        <label>Shelf Life (Days)</label>
-        <input type="number" name="shelf_life_days" required />
-        <label>Current Stock</label>
-        <input type="number" name="current_stock" required />
-        <label>Sold Last 7 Days</label>
-        <input type="number" name="sold_last_7_days" required />
-        <label>Forecasted Demand</label>
-        <input type="number" name="forecasted_demand" required />
-        <label>Temperature (°C)</label>
-        <input type="number" name="temperature_C" required />
-        <label>Humidity (%)</label>
-        <input type="number" name="humidity_percent" required />
-        <label>Category</label>
-        <select name="category">
-          <option value="Fruit">Fruit</option>
-          <option value="Meat">Meat</option>
-          <option value="Vegetable">Vegetable</option>
-          <option value="Dairy">Dairy</option>
-        </select>
-        <button type="submit">Predict Waste Risk</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Page 3 -->
+  <!-- 📦 Page 3 Recommendations -->
   <div id="page3" class="page">
     <div class="container">
       <h2>📦 Action Recommendation</h2>
-      <div id="recommendResult" class="result"></div>
-      <div id="recommendSpinner" class="spinner">⏳ Loading...</div>
       <form id="recommendForm">
-        <label>Shelf Life Days</label>
-        <input type="number" name="shelf_life_days" required />
-        <label>Current Stock</label>
-        <input type="number" name="current_stock" required />
-        <label>Sold Last 7 Days</label>
-        <input type="number" name="sold_last_7_days" required />
-        <label>Forecasted Demand</label>
-        <input type="number" name="forecasted_demand" required />
-        <label>Previous Sales</label>
-        <input type="number" name="previous_sales" required />
-        <label>Stock</label>
-        <input type="number" name="stock" required />
-        <label>Temperature (°C)</label>
-        <input type="number" name="temperature_C" required />
-        <label>Humidity (%)</label>
-        <input type="number" name="humidity_percent" required />
+        <label>Shelf Life Days</label><input type="number" name="shelf_life_days" required />
+        <label>Current Stock</label><input type="number" name="current_stock" required />
+        <label>Sold Last 7 Days</label><input type="number" name="sold_last_7_days" required />
+        <label>Forecasted Demand</label><input type="number" name="forecasted_demand" required />
+        <label>Previous Sales</label><input type="number" name="previous_sales" required />
+        <label>Stock</label><input type="number" name="stock" required />
+        <label>Temperature (°C)</label><input type="number" name="temperature_C" required />
+        <label>Humidity (%)</label><input type="number" name="humidity_percent" required />
         <label>Category</label>
         <select name="category">
           <option value="Dairy">Dairy</option>
@@ -269,16 +183,17 @@
         </select>
         <button type="submit">Get Recommendation</button>
       </form>
+      <div id="recommendResult" class="result"></div>
     </div>
 
+    <!-- Smart Recommendations Table -->
     <div class="table-container">
       <h2 style="text-align:center">📊 Smart Bulk Recommendations</h2>
-<div style="margin-bottom: 20px;">
-  <label><strong>Upload Custom CSV (Required Columns: product_id, name, category, stock, expiry_date, store_location, freshness_score)</strong></label>
-  <input type="file" id="csvInput" accept=".csv" />
-  <button onclick="uploadCSV()">📤 Upload & Analyze</button>
-</div>
-
+      <div style="margin-bottom: 20px;">
+        <label><strong>Upload Custom CSV</strong></label>
+        <input type="file" id="csvInput" accept=".csv" />
+        <button onclick="uploadCSV()">📤 Upload & Analyze</button>
+      </div>
       <button onclick="loadRecommendations()">🔄 Load Recommendations</button>
       <table id="recommendationTable">
         <thead>
@@ -298,10 +213,9 @@
       </table>
       <div class="pagination" id="paginationControls"></div>
     </div>
- </div>
-  
-  
-  <!-- 📊 Page 4: AI-Based Waste Leaderboard -->
+  </div>
+
+  <!-- ✅ Page 4: AI-Based Leaderboard -->
   <div id="page4" class="page">
     <div class="container">
       <h2>🏁 Upload Waste Report (for AI Score)</h2>
@@ -311,46 +225,45 @@
         <button type="submit">Upload & Score</button>
       </form>
       <div id="aiUploadResult" class="result"></div>
+    </div>
+
+    <div class="table-container">
+      <h2 style="text-align:center">📅 AI-Based Daily Leaderboard</h2>
+      <button onclick="loadAIDailyLeaderboard()">🔄 Load Daily</button>
+      <table id="aiDailyLeaderboard">
+        <thead>
+          <tr>
+            <th>Store</th>
+            <th>Donated (kg)</th>
+            <th>Reduced (kg)</th>
+            <th>Wasted (kg)</th>
+            <th>🧠 AI Score</th>
+            <th>Badge</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table-container">
+      <h2 style="text-align:center">📆 Monthly AI Leaderboard</h2>
+      <button onclick="loadAIMonthlyLeaderboard()">🔄 Load Monthly</button>
+      <table id="aiMonthlyLeaderboard">
+        <thead>
+          <tr>
+            <th>Store</th>
+            <th>Total Donated</th>
+            <th>Total Reduced</th>
+            <th>Total Wasted</th>
+            <th>AI Score (Σ)</th>
+            <th>🏆</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="table-container">
-    <h2 style="text-align:center">📅 AI-Based Daily Leaderboard</h2>
-    <button onclick="loadAIDailyLeaderboard()">🔄 Load Daily</button>
-    <table id="aiDailyLeaderboard">
-      <thead>
-        <tr>
-          <th>Store</th>
-          <th>Donated (kg)</th>
-          <th>Reduced (kg)</th>
-          <th>Wasted (kg)</th>
-          <th>🧠 AI Score</th>
-          <th>Badge</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <div class="table-container">
-    <h2 style="text-align:center">📆 Monthly AI Leaderboard</h2>
-    <button onclick="loadAIMonthlyLeaderboard()">🔄 Load Monthly</button>
-    <table id="aiMonthlyLeaderboard">
-      <thead>
-        <tr>
-          <th>Store</th>
-          <th>Total Donated</th>
-          <th>Total Reduced</th>
-          <th>Total Wasted</th>
-          <th>AI Score (Σ)</th>
-          <th>🏆</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div> 
-
-  <!-- Script -->
   <script>
     const BASE_URL = "https://walmart-waste-predictor.onrender.com";
 
@@ -359,259 +272,69 @@
       document.getElementById(id).classList.add("active");
     }
 
-    // Forecast
-    document.getElementById('forecastForm').addEventListener('submit', async function (e) {
+    // ✅ Upload AI Waste CSV
+    document.getElementById("aiUploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const form = e.target, spinner = document.getElementById("forecastSpinner"), resultBox = document.getElementById("forecastResult");
-      spinner.style.display = "block";
-      const payload = {
-        previous_sales: +form.previous_sales.value,
-        stock: +form.stock.value,
-        temperature_C: +form.temperature_C.value
-      };
-      const res = await fetch(`${BASE_URL}/forecast_demand`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      spinner.style.display = "none";
-      resultBox.innerText = result.forecasted_demand !== undefined
-        ? `Forecasted Demand: ${result.forecasted_demand}` : `Error: ${result.error}`;
-      document.querySelectorAll("input[name='forecasted_demand']").forEach(input => {
-        input.value = result.forecasted_demand;
-      });
-    });
+      const resultBox = document.getElementById("aiUploadResult");
+      resultBox.innerText = "⏳ Uploading...";
 
-    // Waste Prediction
-    document.getElementById('predictForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const form = e.target, spinner = document.getElementById("predictSpinner"), resultBox = document.getElementById("predictResult");
-      spinner.style.display = "block";
-      const cat = form.category.value;
-      const payload = {
-        shelf_life_days: +form.shelf_life_days.value,
-        current_stock: +form.current_stock.value,
-        sold_last_7_days: +form.sold_last_7_days.value,
-        forecasted_demand: +form.forecasted_demand.value,
-        temperature_C: +form.temperature_C.value,
-        ["humidity_%"]: +form.humidity_percent.value,
-        category_Dairy: cat === "Dairy" ? 1 : 0,
-        category_Fruit: cat === "Fruit" ? 1 : 0,
-        category_Meat: cat === "Meat" ? 1 : 0,
-        category_Vegetable: cat === "Vegetable" ? 1 : 0
-      };
-      const res = await fetch(`${BASE_URL}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      spinner.style.display = "none";
-      if (result.prediction !== undefined) {
-        resultBox.innerText = `Prediction: ${result.prediction}`;
-        resultBox.style.color = result.prediction === "High Risk" ? "red" : "green";
-      } else {
-        resultBox.innerText = `Error: ${result.error}`;
-        resultBox.style.color = "black";
+      const formData = new FormData();
+      formData.append("file", this.file.files[0]);
+
+      try {
+        const res = await fetch(`${BASE_URL}/upload_waste_ai`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          resultBox.innerText = "✅ Uploaded and scored successfully!";
+          loadAIDailyLeaderboard();
+        } else {
+          resultBox.innerText = `❌ Upload failed: ${data.error}`;
+        }
+      } catch (err) {
+        resultBox.innerText = `❌ Upload error: ${err.message}`;
       }
-
     });
 
-    // Recommendation
-    document.getElementById('recommendForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const form = e.target, spinner = document.getElementById("recommendSpinner"), resultBox = document.getElementById("recommendResult");
-      spinner.style.display = "block";
-      const cat = form.category.value;
-      const payload = {
-        shelf_life_days: +form.shelf_life_days.value,
-        current_stock: +form.current_stock.value,
-        sold_last_7_days: +form.sold_last_7_days.value,
-        forecasted_demand: +form.forecasted_demand.value,
-        previous_sales: +form.previous_sales.value,
-        stock: +form.stock.value,
-        temperature_C: +form.temperature_C.value,
-        ["humidity_%"]: +form.humidity_percent.value,
-        category_Dairy: cat === "Dairy" ? 1 : 0,
-        category_Fruit: cat === "Fruit" ? 1 : 0,
-        category_Meat: cat === "Meat" ? 1 : 0,
-        category_Vegetable: cat === "Vegetable" ? 1 : 0
-      };
-      const res = await fetch(`${BASE_URL}/recommend_action`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      spinner.style.display = "none";
-      resultBox.innerText = result.recommendation !== undefined
-        ? `Action: ${result.recommendation} (Risk: ${result.expiry_risk}, Demand: ${result.forecasted_demand})`
-        : `Error: ${result.error}`;
-      resultBox.style.color = result.recommendation?.includes("Donate") ? "red" :
-                              result.recommendation?.includes("Transfer") ? "orange" : "green";
-    });
-
-    // Smart Table
-    let allData = [], currentPage = 1, pageSize = 5;
-
-    function renderPage(page) {
-      const tbody = document.querySelector("#recommendationTable tbody");
+    async function loadAIDailyLeaderboard() {
+      const res = await fetch(`${BASE_URL}/ai_daily_leaderboard`);
+      const data = await res.json();
+      const tbody = document.querySelector("#aiDailyLeaderboard tbody");
       tbody.innerHTML = "";
-      const start = (page - 1) * pageSize, end = start + pageSize;
-      allData.slice(start, end).forEach(row => {
+      data.forEach(row => {
         const tr = document.createElement("tr");
-        const riskText = row.expiry_risk === 1 ? "High" : "Low";
-        let actionClass = row.recommendation.includes("Donate") ? "Donate" :
-                          row.recommendation.includes("Transfer") ? "Transfer" : "Keep";
         tr.innerHTML = `
-          <td>${row.name}</td>
           <td>${row.store_location}</td>
-          <td>${row.category}</td>
-          <td>${row.stock}</td>
-          <td>${row.freshness_score}</td>
-          <td>${row.expiry_status}</td>
-          <td>${row.daily_demand}</td>
-          <td>${riskText}</td>
-          <td class="${actionClass}">${row.recommendation}</td>
+          <td>${row.waste_donated_kg}</td>
+          <td>${row.waste_reduced_kg}</td>
+          <td>${row.waste_generated_kg}</td>
+          <td><b>${row.ai_score}</b></td>
+          <td>${row.badge}</td>
         `;
         tbody.appendChild(tr);
       });
-      renderPaginationControls();
     }
 
-    function renderPaginationControls() {
-      const totalPages = Math.ceil(allData.length / pageSize);
-      const container = document.getElementById("paginationControls");
-      container.innerHTML = "";
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement("button");
-        btn.innerText = i;
-        btn.classList.toggle("active", i === currentPage);
-        btn.onclick = () => {
-          currentPage = i;
-          renderPage(currentPage);
-        };
-        container.appendChild(btn);
-      }
+    async function loadAIMonthlyLeaderboard() {
+      const res = await fetch(`${BASE_URL}/ai_monthly_leaderboard`);
+      const data = await res.json();
+      const tbody = document.querySelector("#aiMonthlyLeaderboard tbody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.store_location}</td>
+          <td>${row.waste_donated_kg}</td>
+          <td>${row.waste_reduced_kg}</td>
+          <td>${row.waste_generated_kg}</td>
+          <td><b>${row.ai_score}</b></td>
+          <td>${row.badge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
-
-    async function loadRecommendations() {
-      const res = await fetch(`${BASE_URL}/bulk_recommendations`);
-      allData = await res.json();
-      currentPage = 1;
-      renderPage(currentPage);
-    }
-
-    async function uploadCSV() {
-  const fileInput = document.getElementById('csvInput');
-  const file = fileInput.files[0];
-
-  if (!file) {
-    alert("Please select a CSV file first.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch(`${BASE_URL}/upload_csv`, {
-    method: 'POST',
-    body: formData
-  });
-
-  const result = await res.json();
-  if (result.success) {
-    allData = result.data;
-    currentPage = 1;
-    renderPage(currentPage);
-  } else {
-    alert("❌ Upload failed: " + result.error);
-  }
-}
-
-document.getElementById("wasteUploadForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const formData = new FormData();
-  const fileInput = e.target.file;
-  formData.append("file", fileInput.files[0]);
-
-  const res = await fetch(`${BASE_URL}/upload_waste_report`, {
-    method: "POST",
-    body: formData
-  });
-
-  const result = await res.json();
-  document.getElementById("uploadMessage").innerText = result.message || result.error;
-  loadLeaderboards(); // reload after upload
-});
-
-// Load Leaderboards
-document.getElementById("aiUploadForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const resultBox = document.getElementById("aiUploadResult");
-  resultBox.innerText = "⏳ Uploading...";
-  
-  const formData = new FormData();
-  formData.append("file", this.file.files[0]);
-
-  try {
-    const res = await fetch(`${BASE_URL}/upload_ai_waste_report`, {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-      resultBox.innerText = "✅ Uploaded and scored successfully!";
-      loadAIDailyLeaderboard();
-    } else {
-      resultBox.innerText = `❌ Upload failed: ${data.error}`;
-    }
-  } catch (err) {
-    resultBox.innerText = `❌ Upload error: ${err.message}`;
-  }
-});
-
-// 📅 Load AI-Based Daily Leaderboard
-async function loadAIDailyLeaderboard() {
-  const res = await fetch(`${BASE_URL}/ai_daily_leaderboard`);
-  const data = await res.json();
-  const tbody = document.querySelector("#aiDailyLeaderboard tbody");
-  tbody.innerHTML = "";
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${row.store_location}</td>
-      <td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td>
-      <td>${row.waste_generated_kg}</td>
-      <td><b>${row.ai_score}</b></td>
-      <td>${row.badge}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// 📆 Load AI-Based Monthly Leaderboard
-async function loadAIMonthlyLeaderboard() {
-  const res = await fetch(`${BASE_URL}/ai_monthly_leaderboard`);
-  const data = await res.json();
-  const tbody = document.querySelector("#aiMonthlyLeaderboard tbody");
-  tbody.innerHTML = "";
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${row.store_location}</td>
-      <td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td>
-      <td>${row.waste_generated_kg}</td>
-      <td><b>${row.ai_score}</b></td>
-      <td>${row.badge}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
   </script>
 </body>
 </html>
