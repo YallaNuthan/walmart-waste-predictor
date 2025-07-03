@@ -10,7 +10,7 @@ import csv
 app = Flask(__name__)
 CORS(app)
 
-# Load models and columns
+# Load models
 model = joblib.load("waste_predictor_model.pkl")
 model_columns = joblib.load("model_columns.pkl")
 demand_model = joblib.load("demand_model.pkl")
@@ -69,7 +69,6 @@ def upload_csv():
         ]].to_dict(orient="records")
 
         return jsonify({"success": True, "data": output})
-
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
@@ -202,7 +201,7 @@ def critical_alerts():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# ==================== AI Leaderboard Routes =========================
+# ==================== AI Leaderboard =========================
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
     pd.DataFrame(columns=[
@@ -221,9 +220,7 @@ def upload_waste_ai():
             return jsonify({"success": False, "error": "Missing required columns."})
 
         df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
-
-        X = df[["waste_donated_kg", "waste_reduced_kg", "waste_generated_kg"]]
-        df["ai_score"] = ai_model.predict(X).round(2)
+        df["ai_score"] = ai_model.predict(df[["waste_donated_kg", "waste_reduced_kg", "waste_generated_kg"]]).round(2)
 
         df.to_csv(LEADERBOARD_FILE, mode="a", index=False, header=False)
         return jsonify({"success": True, "message": "Report uploaded with AI scores!"})
@@ -236,11 +233,9 @@ def ai_daily_leaderboard():
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
         today = datetime.today().date()
-        daily = df[df["date"] == today]
-        daily = daily.drop_duplicates(subset=["store_location"])
+        daily = df[df["date"] == today].drop_duplicates("store_location")
         daily = daily.sort_values("ai_score", ascending=False).reset_index(drop=True)
         daily["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily) - 3)
-        daily["date"] = daily["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
         return jsonify(daily.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -257,8 +252,7 @@ def ai_monthly_leaderboard():
             "waste_reduced_kg": "sum",
             "waste_generated_kg": "sum",
             "ai_score": "mean"
-        }).reset_index()
-        monthly = monthly.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        }).reset_index().sort_values("ai_score", ascending=False)
         monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
         return jsonify(monthly.to_dict(orient="records"))
     except Exception as e:
@@ -270,22 +264,17 @@ def ai_leaderboard_by_date():
         selected_date_str = request.args.get("date")
         if not selected_date_str:
             return jsonify({"error": "Date parameter is missing."})
-
         selected_date = datetime.strptime(selected_date_str, "%d-%m-%Y").date()
 
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
-
-        result = df[df["date"] == selected_date]
-        result = result.drop_duplicates(subset=["store_location"])
+        result = df[df["date"] == selected_date].drop_duplicates("store_location")
         result = result.sort_values("ai_score", ascending=False).reset_index(drop=True)
         result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
-        result["date"] = result["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
         return jsonify(result.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Run the Flask app
 if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
