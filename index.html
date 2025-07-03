@@ -12,7 +12,6 @@
       margin: 0;
       padding: 0;
     }
-
     .sidebar {
       height: 100%;
       width: 250px;
@@ -25,7 +24,6 @@
       padding-top: 60px;
       z-index: 1000;
     }
-
     .sidebar a {
       padding: 16px 24px;
       text-decoration: none;
@@ -33,11 +31,7 @@
       color: #fff;
       display: block;
     }
-
-    .sidebar a:hover {
-      background-color: #0050c2;
-    }
-
+    .sidebar a:hover { background-color: #0050c2; }
     .openbtn {
       font-size: 24px;
       cursor: pointer;
@@ -50,7 +44,6 @@
       left: 10px;
       z-index: 1100;
     }
-
     .bell-icon {
       position: fixed;
       top: 14px;
@@ -59,7 +52,6 @@
       cursor: pointer;
       z-index: 1100;
     }
-
     .alert-box {
       position: fixed;
       top: 50px;
@@ -75,13 +67,11 @@
       display: none;
       z-index: 1200;
     }
-
     #main {
       transition: margin-left 0.3s;
       padding: 20px;
       margin-left: 0;
     }
-
     .container, .table-container {
       background-color: white;
       border-radius: 10px;
@@ -90,15 +80,12 @@
       max-width: 1100px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
     h2 { text-align: center; color: #003087; }
-
     label {
       display: block;
       margin: 10px 0 6px;
       font-weight: bold;
     }
-
     input, select {
       width: 100%;
       padding: 10px;
@@ -107,7 +94,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     button {
       background-color: #0071ce;
       color: white;
@@ -117,33 +103,22 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     button:hover { background-color: #005bbb; }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       border: 1px solid #ddd;
       padding: 12px;
       text-align: center;
     }
-
-    th {
-      background-color: #0071ce;
-      color: white;
-    }
-
+    th { background-color: #0071ce; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
-
     .result { margin-top: 12px; font-weight: bold; }
-
     .page { display: none; }
     .active { display: block; }
-
     .welcome {
       text-align: center;
       margin-top: 100px;
@@ -151,7 +126,6 @@
       color: #003087;
       padding: 0 20px;
     }
-
     .alert-item {
       border-bottom: 1px solid #eee;
       padding: 10px 0;
@@ -169,9 +143,8 @@
   <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
 </div>
 
-<!-- Hamburger Icon -->
+<!-- Icons -->
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
-<!-- Bell Icon -->
 <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
 <div id="alertBox" class="alert-box"></div>
 
@@ -181,37 +154,27 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- Page 1: Demand Forecast -->
+  <!-- Pages: will be revealed on nav click -->
   <div id="page1" class="page container">
     <h2>📈 Demand Forecast</h2>
     <form id="forecastForm">
-      <label>Previous Sales</label>
-      <input name="previous_sales" type="number" required />
-      <label>Stock</label>
-      <input name="stock" type="number" required />
-      <label>Temperature (°C)</label>
-      <input name="temperature_C" type="number" required />
+      <label>Previous Sales</label><input name="previous_sales" type="number" required />
+      <label>Stock</label><input name="stock" type="number" required />
+      <label>Temperature (°C)</label><input name="temperature_C" type="number" required />
       <button type="submit">Predict</button>
     </form>
     <div id="forecastResult" class="result"></div>
   </div>
 
-  <!-- Page 2: Waste Risk -->
   <div id="page2" class="page container">
     <h2>🗑 Waste Risk Prediction</h2>
     <form id="predictForm">
-      <label>Shelf Life (Days)</label>
-      <input name="shelf_life_days" type="number" required />
-      <label>Current Stock</label>
-      <input name="current_stock" type="number" required />
-      <label>Sold Last 7 Days</label>
-      <input name="sold_last_7_days" type="number" required />
-      <label>Forecasted Demand</label>
-      <input name="forecasted_demand" type="number" required />
-      <label>Temperature (°C)</label>
-      <input name="temperature_C" type="number" required />
-      <label>Humidity (%)</label>
-      <input name="humidity_%" type="number" required />
+      <label>Shelf Life (Days)</label><input name="shelf_life_days" type="number" required />
+      <label>Current Stock</label><input name="current_stock" type="number" required />
+      <label>Sold Last 7 Days</label><input name="sold_last_7_days" type="number" required />
+      <label>Forecasted Demand</label><input name="forecasted_demand" type="number" required />
+      <label>Temperature (°C)</label><input name="temperature_C" type="number" required />
+      <label>Humidity (%)</label><input name="humidity_percent" type="number" required />
       <label>Category</label>
       <select name="category">
         <option>Fruit</option><option>Meat</option>
@@ -222,7 +185,6 @@
     <div id="predictResult" class="result"></div>
   </div>
 
-  <!-- Page 3: Smart Recommendations -->
   <div id="page3" class="page container">
     <h2>📦 Smart Bulk Recommendations</h2>
     <label>Upload Inventory CSV</label>
@@ -230,17 +192,13 @@
     <button onclick="uploadCSV()">Upload & Analyze</button>
     <button onclick="loadRecommendations()">Load Recommendations</button>
     <table id="recommendationTable">
-      <thead>
-        <tr>
-          <th>Product</th><th>Store</th><th>Category</th><th>Stock</th><th>Freshness</th>
-          <th>Expiry</th><th>Demand</th><th>Risk</th><th>Recommendation</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+      <thead><tr>
+        <th>Product</th><th>Store</th><th>Category</th><th>Stock</th><th>Freshness</th>
+        <th>Expiry</th><th>Demand</th><th>Risk</th><th>Recommendation</th>
+      </tr></thead><tbody></tbody>
     </table>
   </div>
 
-  <!-- Page 4: AI Leaderboard -->
   <div id="page4" class="page container">
     <h2>🏁 Upload Waste Report</h2>
     <form id="aiUploadForm" enctype="multipart/form-data">
@@ -254,19 +212,15 @@
     <button onclick="loadAIDaily()">Load Daily</button>
     <input type="date" id="leaderboardDate" />
     <button onclick="loadByDate()">View by Date</button>
-    <table id="aiDailyLeaderboard">
-      <thead>
-        <tr><th>Store</th><th>Donated</th><th>Reduced</th><th>Wasted</th><th>AI Score</th><th>Badge</th></tr>
-      </thead><tbody></tbody>
-    </table>
+    <table id="aiDailyLeaderboard"><thead>
+      <tr><th>Store</th><th>Donated</th><th>Reduced</th><th>Wasted</th><th>AI Score</th><th>Badge</th></tr>
+    </thead><tbody></tbody></table>
 
     <h2>📆 Monthly AI Leaderboard</h2>
     <button onclick="loadAIMonthly()">Load Monthly</button>
-    <table id="aiMonthlyLeaderboard">
-      <thead>
-        <tr><th>Store</th><th>Total Donated</th><th>Total Reduced</th><th>Total Wasted</th><th>AI Score</th><th>🏆</th></tr>
-      </thead><tbody></tbody>
-    </table>
+    <table id="aiMonthlyLeaderboard"><thead>
+      <tr><th>Store</th><th>Total Donated</th><th>Total Reduced</th><th>Total Wasted</th><th>AI Score</th><th>🏆</th></tr>
+    </thead><tbody></tbody></table>
   </div>
 </div>
 
@@ -277,7 +231,6 @@ function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
-
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -313,7 +266,7 @@ document.getElementById("predictForm").onsubmit = async e => {
     sold_last_7_days: +f.sold_last_7_days.value,
     forecasted_demand: +f.forecasted_demand.value,
     temperature_C: +f.temperature_C.value,
-    "humidity_%": +f.["humidity_%"].value,
+    "humidity_%": +f.humidity_percent.value,
     category_Dairy: category === "Dairy" ? 1 : 0,
     category_Fruit: category === "Fruit" ? 1 : 0,
     category_Meat: category === "Meat" ? 1 : 0,
@@ -325,7 +278,8 @@ document.getElementById("predictForm").onsubmit = async e => {
     body: JSON.stringify(payload)
   });
   const result = await res.json();
-  document.getElementById("predictResult").innerText = result.prediction ? `Risk: ${result.prediction}` : `Error: ${result.error}`;
+  document.getElementById("predictResult").innerText = result.prediction
+    ? `Risk: ${result.prediction}` : `Error: ${result.error}`;
 };
 
 async function uploadCSV() {
@@ -339,8 +293,8 @@ async function uploadCSV() {
   json.data.forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
-                    <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
-                    <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
+      <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
+      <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
     table.appendChild(tr);
   });
 }
@@ -353,8 +307,8 @@ async function loadRecommendations() {
   data.forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
-                    <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
-                    <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
+      <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
+      <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
     table.appendChild(tr);
   });
 }
