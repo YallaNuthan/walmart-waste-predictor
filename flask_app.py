@@ -144,9 +144,7 @@ def bulk_recommendations():
         inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
 
         merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
-        merged["expiry_risk"] = merged["days_to_expiry"].apply(
-            lambda d: 1 if pd.notna(d) and d <= 1 else 0
-        )
+        merged["expiry_risk"] = merged["days_to_expiry"].apply(lambda d: 1 if pd.notna(d) and d <= 1 else 0)
 
         def recommend_transfer(row):
             from_store = row["store_location"]
@@ -215,6 +213,7 @@ def ai_daily_leaderboard():
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
         today = datetime.today().date()
         daily = df[df["date"] == today]
+        daily = daily.drop_duplicates(subset=["store_location"])
         daily = daily.sort_values("ai_score", ascending=False).reset_index(drop=True)
         daily["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily) - 3)
         daily["date"] = daily["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
@@ -238,6 +237,28 @@ def ai_monthly_leaderboard():
         monthly = monthly.sort_values("ai_score", ascending=False).reset_index(drop=True)
         monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
         return jsonify(monthly.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# ✅ NEW: Leaderboard by Specific Date (for calendar UI)
+@app.route("/ai_leaderboard_by_date", methods=["GET"])
+def ai_leaderboard_by_date():
+    try:
+        selected_date_str = request.args.get("date")
+        if not selected_date_str:
+            return jsonify({"error": "Date parameter is missing."})
+
+        selected_date = datetime.strptime(selected_date_str, "%d-%m-%Y").date()
+
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+
+        result = df[df["date"] == selected_date]
+        result = result.drop_duplicates(subset=["store_location"])
+        result = result.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
+        result["date"] = result["date"].apply(lambda d: d.strftime("%d-%m-%Y") if pd.notna(d) else "")
+        return jsonify(result.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
 
