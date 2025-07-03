@@ -174,59 +174,7 @@
       color: white;
     }
 
-    #dailyTable, #monthlyTable {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
-}
 
-#dailyTable th, #monthlyTable th,
-#dailyTable td, #monthlyTable td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
-}
-
-#dailyTable th, #monthlyTable th {
-  background-color: #007bff;
-  color: white;
-}
-
-#dailyTable tr:nth-child(even),
-#monthlyTable tr:nth-child(even) {
-  background-color: #f8f9fa;
-}
-
-#dailyTable tr:hover,
-#monthlyTable tr:hover {
-  background-color: #e2e6ea;
-  cursor: default;
-}
-
-/* Badge styling (optional emphasis) */
-td:contains("🥇") {
-  color: gold;
-  font-weight: bold;
-  font-size: 20px;
-}
-
-td:contains("🥈") {
-  color: silver;
-  font-weight: bold;
-  font-size: 20px;
-}
-
-td:contains("🥉") {
-  color: #cd7f32;
-  font-weight: bold;
-  font-size: 20px;
-}
-
-td:contains("🏆") {
-  color: green;
-  font-weight: bold;
-  font-size: 20px;
-}
   </style>
 </head>
 <body>
@@ -350,28 +298,57 @@ td:contains("🏆") {
       </table>
       <div class="pagination" id="paginationControls"></div>
     </div>
-  </div>
-<!-- page 4 -->
+ </div>
+  
+  
+  <!-- 📊 Page 4: AI-Based Waste Leaderboard -->
   <div id="page4" class="page">
-  <div class="container">
-    <h2>📤 Upload Waste Report CSV</h2>
-    <form id="wasteUploadForm">
-      <input type="file" name="file" required />
-      <button type="submit">Upload</button>
-    </form>
-    <div id="uploadMessage" class="result"></div>
+    <div class="container">
+      <h2>🏁 Upload Waste Report (for AI Score)</h2>
+      <form id="aiUploadForm" enctype="multipart/form-data">
+        <label>Upload CSV</label>
+        <input type="file" name="file" accept=".csv" required />
+        <button type="submit">Upload & Score</button>
+      </form>
+      <div id="aiUploadResult" class="result"></div>
   </div>
 
-  <div class="container">
-    <h2>🏅 Daily Leaderboard</h2>
-    <table id="dailyTable"><thead></thead><tbody></tbody></table>
+  <div class="table-container">
+    <h2 style="text-align:center">📅 AI-Based Daily Leaderboard</h2>
+    <button onclick="loadAIDailyLeaderboard()">🔄 Load Daily</button>
+    <table id="aiDailyLeaderboard">
+      <thead>
+        <tr>
+          <th>Store</th>
+          <th>Donated (kg)</th>
+          <th>Reduced (kg)</th>
+          <th>Wasted (kg)</th>
+          <th>🧠 AI Score</th>
+          <th>Badge</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
-  <div class="container">
-    <h2>🏆 Monthly Leaderboard</h2>
-    <table id="monthlyTable"><thead></thead><tbody></tbody></table>
+  <div class="table-container">
+    <h2 style="text-align:center">📆 Monthly AI Leaderboard</h2>
+    <button onclick="loadAIMonthlyLeaderboard()">🔄 Load Monthly</button>
+    <table id="aiMonthlyLeaderboard">
+      <thead>
+        <tr>
+          <th>Store</th>
+          <th>Total Donated</th>
+          <th>Total Reduced</th>
+          <th>Total Wasted</th>
+          <th>AI Score (Σ)</th>
+          <th>🏆</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
-</div>
+</div> 
 
   <!-- Script -->
   <script>
@@ -570,46 +547,69 @@ document.getElementById("wasteUploadForm").addEventListener("submit", async func
 });
 
 // Load Leaderboards
-async function loadLeaderboards() {
-  const daily = await fetch(`${BASE_URL}/daily_leaderboard`).then(r => r.json());
-  const monthly = await fetch(`${BASE_URL}/monthly_leaderboard`).then(r => r.json());
+document.getElementById("aiUploadForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const resultBox = document.getElementById("aiUploadResult");
+  resultBox.innerText = "⏳ Uploading...";
+  
+  const formData = new FormData();
+  formData.append("file", this.file.files[0]);
 
-  function renderTable(data, tableId) {
-    const table = document.getElementById(tableId);
-    if (!data || data.length === 0) {
-      table.innerHTML = "<tr><td>No data</td></tr>";
-      return;
+  try {
+    const res = await fetch(`${BASE_URL}/upload_ai_waste_report`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      resultBox.innerText = "✅ Uploaded and scored successfully!";
+      loadAIDailyLeaderboard();
+    } else {
+      resultBox.innerText = `❌ Upload failed: ${data.error}`;
     }
-
-    const headers = Object.keys(data[0]);
-    table.querySelector("thead").innerHTML =
-      "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-    table.querySelector("tbody").innerHTML =
-      data.map(row => `<tr>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>`).join("");
+  } catch (err) {
+    resultBox.innerText = `❌ Upload error: ${err.message}`;
   }
+});
 
-  renderTable(daily, "dailyTable");
-  renderTable(monthly, "monthlyTable");
+// 📅 Load AI-Based Daily Leaderboard
+async function loadAIDailyLeaderboard() {
+  const res = await fetch(`${BASE_URL}/ai_daily_leaderboard`);
+  const data = await res.json();
+  const tbody = document.querySelector("#aiDailyLeaderboard tbody");
+  tbody.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.store_location}</td>
+      <td>${row.waste_donated_kg}</td>
+      <td>${row.waste_reduced_kg}</td>
+      <td>${row.waste_generated_kg}</td>
+      <td><b>${row.ai_score}</b></td>
+      <td>${row.badge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
-function renderTable(data, tableId) {
-  const table = document.getElementById(tableId);
-  if (!data || data.length === 0) {
-    table.innerHTML = "<tr><td>No data</td></tr>";
-    return;
-  }
 
-  const headers = Object.keys(data[0]);
-  table.querySelector("thead").innerHTML =
-    "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-
-  table.querySelector("tbody").innerHTML = data.map((row, index) => {
-    let bgColor = "";
-    if (row.badge === "🥇") bgColor = "style='background-color: #fff8dc;'";
-    else if (row.badge === "🥈") bgColor = "style='background-color: #f0f0f0;'";
-    else if (row.badge === "🥉") bgColor = "style='background-color: #f9f5f0;'";
-
-    return `<tr ${bgColor}>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>`;
-  }).join("");
+// 📆 Load AI-Based Monthly Leaderboard
+async function loadAIMonthlyLeaderboard() {
+  const res = await fetch(`${BASE_URL}/ai_monthly_leaderboard`);
+  const data = await res.json();
+  const tbody = document.querySelector("#aiMonthlyLeaderboard tbody");
+  tbody.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.store_location}</td>
+      <td>${row.waste_donated_kg}</td>
+      <td>${row.waste_reduced_kg}</td>
+      <td>${row.waste_generated_kg}</td>
+      <td><b>${row.ai_score}</b></td>
+      <td>${row.badge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
   </script>
