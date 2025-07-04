@@ -10,10 +10,10 @@ app = Flask(__name__)
 CORS(app)
 
 # Load Improved Models
-model = joblib.load("waste_predictor_model.pkl")  # Classifier
-model_columns = joblib.load("model_columns.pkl")  # Feature columns
-demand_model = joblib.load("demand_model.pkl")    # Regressor
-ai_model = joblib.load("ai_score_model.pkl")      # Regressor
+model = joblib.load("waste_predictor_model.pkl")
+model_columns = joblib.load("model_columns.pkl")
+demand_model = joblib.load("demand_model.pkl")
+ai_model = joblib.load("ai_score_model.pkl")
 
 @app.route('/')
 def home():
@@ -62,12 +62,38 @@ def upload_csv():
 
         df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-        output = df[[
+        # Final recommendations table
+        recommendations = df[[
             "product_id", "name", "store_location", "category", "stock", "freshness_score",
             "expiry_status", "daily_demand", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
-        return jsonify({"success": True, "data": output})
+        # Smart Alert logic
+        alerts_df = df[
+            (df["days_to_expiry"] < 1) |
+            ((df["stock"] > 50) & (df["daily_demand"] < 10)) |
+            ((df["daily_demand"] > 80) & (df["stock"] < 20) & (df["days_to_expiry"] > 1))
+        ].copy()
+
+        def detect_reason(row):
+            if row["days_to_expiry"] < 1:
+                return "❗ Expiring Today"
+            elif row["stock"] > 50 and row["daily_demand"] < 10:
+                return "📉 Overstocked, Low Demand"
+            elif row["daily_demand"] > 80 and row["stock"] < 20 and row["days_to_expiry"] > 1:
+                return "⚡ Demand Surge, Low Stock"
+            return "Unknown"
+
+        alerts_df["alert_reason"] = alerts_df.apply(detect_reason, axis=1)
+        alerts_df["expiry_date"] = alerts_df["expiry_date"].dt.strftime("%d-%m-%Y")
+
+        alerts = alerts_df[[
+            "product_id", "name", "store_location", "category", "stock",
+            "expiry_date", "daily_demand", "days_to_expiry", "alert_reason"
+        ]].to_dict(orient="records")
+
+        return jsonify({"success": True, "recommendations": recommendations, "alerts": alerts})
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
@@ -98,14 +124,11 @@ def recommend_action():
         data = request.json
         expiry_features = [data[col] for col in model_columns]
         expiry_risk = model.predict([expiry_features])[0]
-
         demand_features = [data['previous_sales'], data['stock'], data['temperature_C']]
         demand = demand_model.predict([demand_features])[0]
-
         action = "Donate" if expiry_risk == 1 and demand < 20 else \
                  "Transfer or Apply Discount" if expiry_risk == 1 else \
                  "Keep in Stock"
-
         return jsonify({
             'expiry_risk': int(expiry_risk),
             'forecasted_demand': round(demand, 2),
@@ -114,104 +137,8 @@ def recommend_action():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-@app.route("/bulk_recommendations", methods=["GET"])
-def bulk_recommendations():
-    try:
-        inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
-        demand = pd.read_csv("data/store_demand.csv", sep="\t")
-        distance = pd.read_csv("data/store_distance.csv", sep="\t")
+# === AI Leaderboard unchanged ===
 
-        inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors="coerce")
-        today = datetime.today().date()
-        inventory["days_to_expiry"] = inventory["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
-
-        def label_expiry_status(days):
-            if pd.isna(days):
-                return "Invalid Date"
-            elif days < 0:
-                return "Already Expired"
-            else:
-                return f"{days} day(s) left"
-
-        inventory["expiry_status"] = inventory["days_to_expiry"].apply(label_expiry_status)
-        inventory["expiry_date"] = inventory["expiry_date"].dt.strftime("%d-%m-%Y")
-
-        merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
-        merged["expiry_risk"] = merged["days_to_expiry"].apply(lambda d: 1 if pd.notna(d) and d <= 1 else 0)
-
-        def recommend_transfer(row):
-            from_store = row["store_location"]
-            product_id = row["product_id"]
-            required_demand = row["daily_demand"]
-            nearby = distance[distance["from_store"] == from_store]
-
-            best_store = None
-            min_distance = float("inf")
-            for _, d in nearby.iterrows():
-                to_store = d["to_store"]
-                dist = d["distance_km"]
-                match = demand[
-                    (demand["store_location"] == to_store) &
-                    (demand["product_id"] == product_id)
-                ]
-                if not match.empty and match.iloc[0]["daily_demand"] > required_demand and dist < min_distance:
-                    best_store = to_store
-                    min_distance = dist
-            return best_store if best_store else "Keep in Stock"
-
-        merged["recommendation"] = merged.apply(
-            lambda row: "Donate" if row["expiry_risk"] else recommend_transfer(row),
-            axis=1
-        )
-
-        return jsonify(merged[[
-            "product_id", "name", "store_location", "category", "stock", "freshness_score",
-            "expiry_date", "expiry_status", "daily_demand", "expiry_risk", "recommendation"
-        ]].to_dict(orient="records"))
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-@app.route("/critical_alerts", methods=["GET"])
-def critical_alerts():
-    try:
-        inventory = pd.read_csv("data/product_inventory.csv", sep="\t")
-        demand = pd.read_csv("data/store_demand.csv", sep="\t")
-
-        today = datetime.today().date()
-        inventory["expiry_date"] = pd.to_datetime(inventory["expiry_date"], format="%d-%m-%Y", errors='coerce')
-        inventory["days_to_expiry"] = inventory["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
-
-        merged = pd.merge(inventory, demand, on=["store_location", "product_id"], how="left")
-
-        alerts = merged[
-            (merged["days_to_expiry"] < 1) |
-            ((merged["stock"] > 50) & (merged["daily_demand"] < 10)) |
-            ((merged["daily_demand"] > 80) & (merged["stock"] < 20) & (merged["days_to_expiry"] > 1))
-        ]
-
-        result = alerts[[
-            "product_id", "name", "store_location", "category", "stock",
-            "expiry_date", "daily_demand", "days_to_expiry"
-        ]].copy()
-
-        result["expiry_date"] = result["expiry_date"].dt.strftime("%d-%m-%Y")
-
-        def detect_reason(row):
-            if row["days_to_expiry"] < 1:
-                return "❗ Expiring Today"
-            elif row["stock"] > 50 and row["daily_demand"] < 10:
-                return "📉 Overstocked, Low Demand"
-            elif row["daily_demand"] > 80 and row["stock"] < 20 and row["days_to_expiry"] > 1:
-                return "⚡ Demand Surge, Low Stock"
-            return "Unknown"
-
-        result["alert_reason"] = result.apply(detect_reason, axis=1)
-
-        return jsonify(result.to_dict(orient="records"))
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-# ==================== AI Leaderboard =========================
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
     pd.DataFrame(columns=[
@@ -224,14 +151,11 @@ def upload_waste_ai():
     try:
         file = request.files['file']
         df = pd.read_csv(file)
-
         required = {"store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date"}
         if not required.issubset(df.columns):
             return jsonify({"success": False, "error": "Missing required columns."})
-
         df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
         df["ai_score"] = ai_model.predict(df[["waste_donated_kg", "waste_reduced_kg", "waste_generated_kg"]]).round(2)
-
         df.to_csv(LEADERBOARD_FILE, mode="a", index=False, header=False)
         return jsonify({"success": True, "message": "Report uploaded with AI scores!"})
     except Exception as e:
@@ -275,7 +199,6 @@ def ai_leaderboard_by_date():
         if not selected_date_str:
             return jsonify({"error": "Date parameter is missing."})
         selected_date = datetime.strptime(selected_date_str, "%d-%m-%Y").date()
-
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
         result = df[df["date"] == selected_date].drop_duplicates("store_location")
