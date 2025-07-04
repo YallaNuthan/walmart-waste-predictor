@@ -72,7 +72,7 @@
       padding: 20px;
       margin-left: 0;
     }
-    .container, .table-container {
+    .container {
       background-color: white;
       border-radius: 10px;
       padding: 30px;
@@ -154,12 +154,25 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- ... Your existing pages stay unchanged ... -->
+  <!-- 📦 Page 3: Smart Recommendations -->
+  <div id="page3" class="page container">
+    <h2>📦 Smart Bulk Recommendations</h2>
+    <label>Upload Inventory CSV</label>
+    <input id="csvInput" type="file" accept=".csv" />
+    <button onclick="uploadCSV()">Upload & Analyze</button>
+    <table id="recommendationTable">
+      <thead><tr>
+        <th>Product</th><th>Store</th><th>Category</th><th>Stock</th><th>Freshness</th>
+        <th>Expiry</th><th>Demand</th><th>Risk</th><th>Recommendation</th>
+      </tr></thead><tbody></tbody>
+    </table>
+  </div>
 
 </div>
 
 <script>
 const BASE = "https://walmart-waste-predictor.onrender.com";
+let latestAlerts = [];
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
@@ -174,27 +187,44 @@ function navigate(id) {
   document.getElementById("alertBox").style.display = "none";
 }
 
-// ✅ SMART ALERTS WITH REASON
-async function toggleAlerts() {
+async function uploadCSV() {
+  const file = document.getElementById("csvInput").files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${BASE}/upload_csv`, { method: "POST", body: formData });
+  const json = await res.json();
+
+  const table = document.getElementById("recommendationTable").querySelector("tbody");
+  table.innerHTML = "";
+  json.recommendations.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
+      <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
+      <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
+    table.appendChild(tr);
+  });
+
+  // Save alerts to global variable
+  latestAlerts = json.alerts || [];
+  alert("Upload successful! Alerts updated 🔔");
+}
+
+function toggleAlerts() {
   const box = document.getElementById("alertBox");
   box.style.display = box.style.display === "block" ? "none" : "block";
-  if (box.style.display === "block") {
-    const res = await fetch(`${BASE}/critical_alerts`);
-    const alerts = await res.json();
-    box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
-    if (!alerts.length) {
-      box.innerHTML += "<p>No critical alerts!</p>";
-    } else {
-      alerts.forEach(alert => {
-        box.innerHTML += `
-          <div class="alert-item">
-            🔎 <b>${alert.name}</b> (${alert.store_location})<br>
-            📦 Stock: ${alert.stock}, 📈 Demand: ${alert.daily_demand}<br>
-            🧾 Expiry: ${alert.expiry_date}<br>
-            🧠 Alert: <b>${alert.alert_reason}</b>
-          </div>`;
-      });
-    }
+  box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
+  if (!latestAlerts.length) {
+    box.innerHTML += "<p>No critical alerts!</p>";
+  } else {
+    latestAlerts.forEach(alert => {
+      box.innerHTML += `
+        <div class="alert-item">
+          🔎 <b>${alert.name}</b> (${alert.store_location})<br>
+          📦 Stock: ${alert.stock}, 📈 Demand: ${alert.daily_demand}<br>
+          🧾 Expiry: ${alert.expiry_date}<br>
+          🧠 Alert: <b>${alert.alert_reason}</b>
+        </div>`;
+    });
   }
 }
 </script>
