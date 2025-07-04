@@ -6,113 +6,52 @@
   <title>Walmart Waste Predictor</title>
   <style>
     * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 0;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
     .sidebar {
-      height: 100%;
-      width: 250px;
-      position: fixed;
-      top: 0;
-      left: -250px;
-      background-color: #003087;
-      overflow-x: hidden;
-      transition: 0.3s;
-      padding-top: 60px;
-      z-index: 1000;
+      height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
+      background-color: #003087; overflow-x: hidden; transition: 0.3s;
+      padding-top: 60px; z-index: 1000;
     }
     .sidebar a {
-      padding: 16px 24px;
-      text-decoration: none;
-      font-size: 18px;
-      color: #fff;
-      display: block;
+      padding: 16px 24px; text-decoration: none; font-size: 18px;
+      color: #fff; display: block;
     }
     .sidebar a:hover { background-color: #0050c2; }
     .openbtn {
-      font-size: 24px;
-      cursor: pointer;
-      background-color: #003087;
-      color: white;
-      padding: 12px 18px;
-      border: none;
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 1100;
+      font-size: 24px; cursor: pointer; background-color: #003087; color: white;
+      padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100;
     }
     .bell-icon {
-      position: fixed;
-      top: 14px;
-      right: 20px;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 1100;
+      position: fixed; top: 14px; right: 20px; font-size: 24px;
+      cursor: pointer; z-index: 1100;
     }
     .alert-box {
-      position: fixed;
-      top: 50px;
-      right: 20px;
-      width: 320px;
-      max-height: 400px;
-      overflow-y: auto;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      padding: 16px;
-      display: none;
-      z-index: 1200;
+      position: fixed; top: 50px; right: 20px; width: 320px; max-height: 400px;
+      overflow-y: auto; background: white; border: 1px solid #ccc;
+      border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 16px; display: none; z-index: 1200;
     }
-    #main {
-      transition: margin-left 0.3s;
-      padding: 20px;
-      margin-left: 0;
-    }
+    #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
     .container {
-      background-color: white;
-      border-radius: 10px;
-      padding: 30px;
-      margin: 20px auto;
-      max-width: 1100px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background-color: white; border-radius: 10px; padding: 30px;
+      margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 { text-align: center; color: #003087; }
-    label {
-      display: block;
-      margin: 10px 0 6px;
-      font-weight: bold;
-    }
+    label { display: block; margin: 10px 0 6px; font-weight: bold; }
     input, select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      width: 100%; padding: 10px; font-size: 16px; margin-bottom: 12px;
+      border-radius: 6px; border: 1px solid #ccc;
     }
     button {
-      background-color: #0071ce;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+      background-color: #0071ce; color: white; padding: 10px 20px;
+      border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
     }
     button:hover { background-color: #005bbb; }
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
+      width: 100%; border-collapse: collapse; margin-top: 20px;
     }
     th, td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: center;
+      border: 1px solid #ddd; padding: 12px; text-align: center;
     }
     th { background-color: #0071ce; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
@@ -120,22 +59,16 @@
     .page { display: none; }
     .active { display: block; }
     .welcome {
-      text-align: center;
-      margin-top: 100px;
-      font-size: 26px;
-      color: #003087;
-      padding: 0 20px;
+      text-align: center; margin-top: 100px; font-size: 26px;
+      color: #003087; padding: 0 20px;
     }
     .alert-item {
-      border-bottom: 1px solid #eee;
-      padding: 10px 0;
-      font-size: 14px;
+      border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
     }
   </style>
 </head>
 <body>
 
-<!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
   <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
   <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
@@ -143,7 +76,6 @@
   <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
 </div>
 
-<!-- Icons -->
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
 <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
 <div id="alertBox" class="alert-box"></div>
@@ -185,7 +117,7 @@
     <div id="wasteResult" class="result"></div>
   </div>
 
-  <!-- 📦 Smart Bulk Recommendations -->
+  <!-- 📦 Smart Recommendations -->
   <div id="page3" class="page container">
     <h2>📦 Smart Bulk Recommendations</h2>
     <label>Upload Inventory CSV</label>
@@ -201,26 +133,8 @@
 
   <!-- 🏁 AI Leaderboard -->
   <div id="page4" class="page container">
-    <h2>📤 Upload Waste Report</h2>
-    <form id="aiUploadForm">
-      <input type="file" name="file" required />
-      <button type="submit">Upload & Score</button>
-    </form>
-    <div id="aiUploadResult" class="result"></div>
-
-    <h2>📅 Daily Leaderboard</h2>
-    <button onclick="loadAIDaily()">Load Today</button>
-    <input type="date" id="leaderboardDate" />
-    <button onclick="loadByDate()">View by Date</button>
-    <table id="aiDailyLeaderboard"><thead>
-      <tr><th>Store</th><th>Donated</th><th>Reduced</th><th>Wasted</th><th>AI Score</th><th>Badge</th></tr>
-    </thead><tbody></tbody></table>
-
-    <h2>📆 Monthly Leaderboard</h2>
-    <button onclick="loadAIMonthly()">Load Monthly</button>
-    <table id="aiMonthlyLeaderboard"><thead>
-      <tr><th>Store</th><th>Total Donated</th><th>Total Reduced</th><th>Total Wasted</th><th>AI Score</th><th>🏆</th></tr>
-    </thead><tbody></tbody></table>
+    <h2>🏁 AI Leaderboard</h2>
+    <p>Check daily and monthly AI scoring reports based on waste metrics.</p>
   </div>
 </div>
 
@@ -232,6 +146,7 @@ function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
+
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -239,48 +154,6 @@ function navigate(id) {
   document.getElementById("mySidebar").style.left = "-250px";
   document.getElementById("alertBox").style.display = "none";
 }
-
-document.getElementById("forecastForm")?.addEventListener("submit", async e => {
-  e.preventDefault();
-  const f = e.target;
-  const res = await fetch(`${BASE}/forecast_demand`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      previous_sales: +f.previous_sales.value,
-      stock: +f.stock.value,
-      temperature_C: +f.temperature_C.value
-    })
-  });
-  const data = await res.json();
-  document.getElementById("forecastResult").innerText = data.forecasted_demand !== undefined
-    ? `📊 Forecasted Demand: ${data.forecasted_demand}` : `❌ Error: ${data.error}`;
-});
-
-document.getElementById("wasteForm")?.addEventListener("submit", async e => {
-  e.preventDefault();
-  const f = e.target;
-  const cat = f.category.value;
-  const payload = {
-    shelf_life_days: +f.shelf_life_days.value,
-    current_stock: +f.current_stock.value,
-    sold_last_7_days: +f.sold_last_7_days.value,
-    forecasted_demand: +f.forecasted_demand.value,
-    temperature_C: +f.temperature_C.value,
-    humidity_percent: +f.humidity_percent.value,
-    category_Dairy: cat === "Dairy" ? 1 : 0,
-    category_Fruit: cat === "Fruit" ? 1 : 0,
-    category_Meat: cat === "Meat" ? 1 : 0,
-    category_Vegetable: cat === "Vegetable" ? 1 : 0
-  };
-  const res = await fetch(`${BASE}/predict`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  document.getElementById("wasteResult").innerText = data.prediction || data.error;
-});
 
 async function uploadCSV() {
   const file = document.getElementById("csvInput").files[0];
@@ -291,7 +164,7 @@ async function uploadCSV() {
 
   const table = document.getElementById("recommendationTable").querySelector("tbody");
   table.innerHTML = "";
-  (json.data || []).forEach(row => {
+  (json.recommendations || []).forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
       <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
@@ -320,56 +193,6 @@ function toggleAlerts() {
         </div>`;
     });
   }
-}
-
-document.getElementById("aiUploadForm")?.addEventListener("submit", async e => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const res = await fetch(`${BASE}/upload_waste_ai`, {
-    method: "POST", body: formData
-  });
-  const json = await res.json();
-  document.getElementById("aiUploadResult").innerText = json.message || json.error;
-});
-
-async function loadAIDaily() {
-  const res = await fetch(`${BASE}/ai_daily_leaderboard`);
-  const data = await res.json();
-  const table = document.getElementById("aiDailyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
-}
-
-async function loadByDate() {
-  const d = document.getElementById("leaderboardDate").value;
-  if (!d) return alert("Pick a date");
-  const [y, m, day] = d.split("-");
-  const format = `${day}-${m}-${y}`;
-  const res = await fetch(`${BASE}/ai_leaderboard_by_date?date=${format}`);
-  const data = await res.json();
-  const table = document.getElementById("aiDailyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
-}
-
-async function loadAIMonthly() {
-  const res = await fetch(`${BASE}/ai_monthly_leaderboard`);
-  const data = await res.json();
-  const table = document.getElementById("aiMonthlyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
 }
 </script>
 </body>
