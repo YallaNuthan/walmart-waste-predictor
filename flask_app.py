@@ -187,15 +187,28 @@ def critical_alerts():
 
         alerts = merged[
             (merged["days_to_expiry"] < 1) |
-            ((merged["stock"] > 50) & (merged["daily_demand"] < 10))
+            ((merged["stock"] > 50) & (merged["daily_demand"] < 10)) |
+            ((merged["daily_demand"] > 80) & (merged["stock"] < 20) & (merged["days_to_expiry"] > 1))
         ]
 
-        result = alerts[[
+        result = alerts[[  
             "product_id", "name", "store_location", "category", "stock",
             "expiry_date", "daily_demand", "days_to_expiry"
         ]].copy()
 
         result["expiry_date"] = result["expiry_date"].dt.strftime("%d-%m-%Y")
+
+        # Add a "reason" for the alert
+        def detect_reason(row):
+            if row["days_to_expiry"] < 1:
+                return "❗ Expiring Today"
+            elif row["stock"] > 50 and row["daily_demand"] < 10:
+                return "📉 Overstocked, Low Demand"
+            elif row["daily_demand"] > 80 and row["stock"] < 20 and row["days_to_expiry"] > 1:
+                return "⚡ Demand Surge, Low Stock"
+            return "Unknown"
+
+        result["alert_reason"] = result.apply(detect_reason, axis=1)
 
         return jsonify(result.to_dict(orient="records"))
     except Exception as e:
