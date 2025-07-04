@@ -154,7 +154,25 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- 📦 Page 3: Smart Recommendations -->
+  <!-- ✅ Page 1 -->
+  <div id="page1" class="page container">
+    <h2>📈 Demand Forecast</h2>
+    <form id="forecastForm">
+      <label>Previous Sales</label><input name="previous_sales" type="number" required />
+      <label>Stock</label><input name="stock" type="number" required />
+      <label>Temperature (°C)</label><input name="temperature_C" type="number" required />
+      <button type="submit">Predict</button>
+    </form>
+    <div id="forecastResult" class="result"></div>
+  </div>
+
+  <!-- ✅ Page 2 -->
+  <div id="page2" class="page container">
+    <h2>🗑 Waste Risk (Coming Soon)</h2>
+    <p>This feature is currently under development.</p>
+  </div>
+
+  <!-- ✅ Page 3 -->
   <div id="page3" class="page container">
     <h2>📦 Smart Bulk Recommendations</h2>
     <label>Upload Inventory CSV</label>
@@ -168,6 +186,11 @@
     </table>
   </div>
 
+  <!-- ✅ Page 4 -->
+  <div id="page4" class="page container">
+    <h2>🏁 AI Leaderboard (Coming Soon)</h2>
+    <p>This section will display store performance based on AI scores.</p>
+  </div>
 </div>
 
 <script>
@@ -181,10 +204,13 @@ function toggleSidebar() {
 
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.getElementById("welcome").style.display = "none";
-  document.getElementById("mySidebar").style.left = "-250px";
-  document.getElementById("alertBox").style.display = "none";
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.add("active");
+    document.getElementById("welcome").style.display = "none";
+    document.getElementById("mySidebar").style.left = "-250px";
+    document.getElementById("alertBox").style.display = "none";
+  }
 }
 
 async function uploadCSV() {
@@ -196,7 +222,7 @@ async function uploadCSV() {
 
   const table = document.getElementById("recommendationTable").querySelector("tbody");
   table.innerHTML = "";
-  json.recommendations.forEach(row => {
+  (json.data || []).forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
       <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
@@ -204,7 +230,6 @@ async function uploadCSV() {
     table.appendChild(tr);
   });
 
-  // Save alerts to global variable
   latestAlerts = json.alerts || [];
   alert("Upload successful! Alerts updated 🔔");
 }
@@ -227,6 +252,24 @@ function toggleAlerts() {
     });
   }
 }
+
+document.getElementById("forecastForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const res = await fetch(`${BASE}/forecast_demand`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      previous_sales: +f.previous_sales.value,
+      stock: +f.stock.value,
+      temperature_C: +f.temperature_C.value
+    })
+  });
+  const data = await res.json();
+  document.getElementById("forecastResult").innerText = data.forecasted_demand !== undefined
+    ? `📊 Forecasted Demand: ${data.forecasted_demand}`
+    : `❌ Error: ${data.error}`;
+});
 </script>
 </body>
 </html>
