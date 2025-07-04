@@ -5,16 +5,15 @@ import numpy as np
 import os
 import pandas as pd
 from datetime import datetime
-import csv
 
 app = Flask(__name__)
 CORS(app)
 
-# Load models
-model = joblib.load("waste_predictor_model.pkl")
-model_columns = joblib.load("model_columns.pkl")
-demand_model = joblib.load("demand_model.pkl")
-ai_model = joblib.load("ai_score_model.pkl")
+# Load Improved Models
+model = joblib.load("waste_predictor_model.pkl")  # Classifier
+model_columns = joblib.load("model_columns.pkl")  # Feature columns
+demand_model = joblib.load("demand_model.pkl")    # Regressor
+ai_model = joblib.load("ai_score_model.pkl")      # Regressor
 
 @app.route('/')
 def home():
@@ -172,7 +171,6 @@ def bulk_recommendations():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# ✅ Smart Alerts Endpoint
 @app.route("/critical_alerts", methods=["GET"])
 def critical_alerts():
     try:
@@ -191,14 +189,13 @@ def critical_alerts():
             ((merged["daily_demand"] > 80) & (merged["stock"] < 20) & (merged["days_to_expiry"] > 1))
         ]
 
-        result = alerts[[  
+        result = alerts[[
             "product_id", "name", "store_location", "category", "stock",
             "expiry_date", "daily_demand", "days_to_expiry"
         ]].copy()
 
         result["expiry_date"] = result["expiry_date"].dt.strftime("%d-%m-%Y")
 
-        # Add a "reason" for the alert
         def detect_reason(row):
             if row["days_to_expiry"] < 1:
                 return "❗ Expiring Today"
