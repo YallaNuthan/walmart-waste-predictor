@@ -165,8 +165,18 @@
 <button onclick="uploadWasteCSV()">Upload & Forecast</button>
 <div id="wasteForecastResult" class="result"></div>
 <img id="forecastPlot" src="static/forecast_plot.png" alt="Forecast Plot" style="display:none; max-width:100%; margin-top:20px;">
-<table id="wasteForecastTable"><thead><tr><th>Date</th><th>Predicted Waste (kg)</th></tr></thead><tbody></tbody></table>
 
+ <table id="forecastResultTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Store</th>
+        <th>Item</th>
+        <th>Date</th>
+        <th>Predicted Waste (kg)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script>
@@ -275,40 +285,54 @@ async function loadAIMonthly() {
 }
 
 // 📈 Upload Waste CSV and Forecast
+
 async function uploadWasteCSV() {
   const file = document.getElementById("wasteCSV").files[0];
-  if (!file) return alert("Please upload a CSV file.");
+  if (!file) {
+    alert("Please upload a CSV file.");
+    return;
+  }
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${BASE}/forecast_waste`, {
-    method: "POST",
-    body: formData
-  });
+  try {
+    const res = await fetch(`${BASE}/forecast_waste`, {
+      method: "POST",
+      body: formData
+    });
 
-  const result = await res.json();
+    const data = await res.json();
 
-  if (result.success) {
-    document.getElementById("forecastPlot").src = "static/forecast_plot.png?" + new Date().getTime();
-    document.getElementById("forecastPlot").style.display = "block";
-    loadWasteForecast();
+    if (data.error) {
+      document.getElementById("wasteForecastResult").innerText = `❌ ${data.error}`;
+      document.getElementById("forecastResultTable").style.display = "none";
+      return;
+    }
+
+    // 🧾 Update table
+    const table = document.getElementById("forecastResultTable").querySelector("tbody");
+    table.innerHTML = "";
+    data.forEach(row => {
+      table.innerHTML += `<tr>
+        <td>${row.store_location}</td>
+        <td>${row.item_name}</td>
+        <td>${row.date}</td>
+        <td>${row.predicted_waste_kg.toFixed(2)}</td>
+      </tr>`;
+    });
+
+    // ✅ Show results
     document.getElementById("wasteForecastResult").innerText = "✅ Forecast complete!";
-  } else {
-    document.getElementById("wasteForecastResult").innerText = `❌ ${result.error}`;
+    document.getElementById("forecastResultTable").style.display = "table";
+    document.getElementById("forecastPlot").style.display = "none"; // optional
+
+  } catch (error) {
+    document.getElementById("wasteForecastResult").innerText = `❌ Error: ${error.message}`;
   }
 }
 
-async function loadWasteForecast() {
-  const res = await fetch(`${BASE}/forecast_waste`);
-  const data = await res.json();
 
-  const table = document.getElementById("wasteForecastTable").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.date}</td><td>${row.predicted_waste_kg.toFixed(2)}</td></tr>`;
-  });
-}
 
 
 </script>
