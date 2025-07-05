@@ -208,7 +208,7 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-@app.route("/forecast_waste", methods=["GET"])
+@app.route("/forecast_waste", methods=["POST"])
 def forecast_waste():
     try:
         from prophet import Prophet
