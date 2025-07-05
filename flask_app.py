@@ -211,32 +211,55 @@ def ai_leaderboard_by_date():
 @app.route("/forecast_waste", methods=["POST"])
 def forecast_waste():
     try:
-        from prophet import Prophet
-        import joblib
-        import pandas as pd
-
+        # ⬆️ 1. Read CSV File
         file = request.files['file']
         df = pd.read_csv(file)
-        df.columns = ["ds", "y"]
-        df["ds"] = pd.to_datetime(df["ds"], format="%d-%m-%Y")
 
-        model = Prophet()
-        model.fit(df)
+        # ✅ 2. Validate required columns
+        expected_columns = {"store_location", "item_name", "date", "waste_kg"}
+        if not expected_columns.issubset(df.columns):
+            return jsonify({"error": f"Missing required columns: {expected_columns}"}), 400
 
-        future = model.make_future_dataframe(periods=7)
-        forecast = model.predict(future)
+        # 🗓️ 3. Parse date and rename columns for Prophet
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce")
+        df = df.dropna(subset=["date", "waste_kg"])
+        df["waste_kg"] = pd.to_numeric(df["waste_kg"], errors="coerce")
 
-        result = forecast[["ds", "yhat"]].tail(7)
-        result = result.rename(columns={"ds": "date", "yhat": "predicted_waste_kg"})
-        result["date"] = result["date"].dt.strftime("%d-%m-%Y")
+        results = []
 
-        return jsonify(result.to_dict(orient="records"))
+        # 🔁 4. Forecast for each store-item group
+        grouped = df.groupby(["store_location", "item_name"])
+        for (store, item), group_df in grouped:
+            group_df = group_df.rename(columns={"date": "ds", "waste_kg": "y"})
+            group_df = group_df[["ds", "y"]].sort_values("ds")
+
+            if len(group_df) < 2:
+                continue  # Prophet needs at least 2 rows
+
+            model = Prophet()
+            model.fit(group_df)
+
+            future = model.make_future_dataframe(periods=7)
+            forecast = model.predict(future)
+
+            forecast_result = forecast[["ds", "yhat"]].tail(7)
+            forecast_result["ds"] = forecast_result["ds"].dt.strftime("%d-%m-%Y")
+
+            for _, row in forecast_result.iterrows():
+                results.append({
+                    "store_location": store,
+                    "item_name": item,
+                    "date": row["ds"],
+                    "predicted_waste_kg": round(row["yhat"], 2)
+                })
+
+        return jsonify(results)
+
     except Exception as e:
         return jsonify({"error": str(e)})
 
-
 if __name__ == '__main__':
     
-    port = int(os.environ.get("PORT", 10000))
-    print(f"✅ Starting Flask on port {port}...")
-    app.run(host='0.0.0.0', port=port)
+    print("✅ Starting Flask...")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
