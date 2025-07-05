@@ -208,6 +208,30 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route("/forecast_waste", methods=["GET"])
+def forecast_waste():
+    try:
+        from prophet import Prophet
+        import joblib
+
+        model = joblib.load("waste_forecaster_model.pkl")
+
+        # 📅 Create future dataframe (7 days)
+        future = model.make_future_dataframe(periods=7)
+        forecast = model.predict(future)
+
+        # 🎯 Return last 7 predicted values only
+        result = forecast[["ds", "yhat"]].tail(7)
+        result = result.rename(columns={"ds": "date", "yhat": "predicted_waste_kg"})
+        result["date"] = result["date"].dt.strftime("%d-%m-%Y")
+
+        return jsonify(result.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+
+
 if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
