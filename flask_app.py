@@ -5,6 +5,8 @@ import numpy as np
 import os
 import pandas as pd
 from datetime import datetime
+from prophet import Prophet
+
 
 app = Flask(__name__)
 CORS(app)
