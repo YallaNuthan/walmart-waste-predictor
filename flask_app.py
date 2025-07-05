@@ -211,41 +211,28 @@ def ai_leaderboard_by_date():
 @app.route("/forecast_waste", methods=["POST"])
 def forecast_waste():
     try:
-        import pandas as pd
         from prophet import Prophet
-        from flask import request, jsonify
-        from io import StringIO
+        import joblib
+        import pandas as pd
 
-        # 📥 Load CSV data from uploaded file
         file = request.files['file']
         df = pd.read_csv(file)
+        df.columns = ["ds", "y"]
+        df["ds"] = pd.to_datetime(df["ds"], format="%d-%m-%Y")
 
-        # 📅 Ensure proper column names
-        if "date" not in df.columns or "waste_kg" not in df.columns:
-            return jsonify({"error": "CSV must contain 'date' and 'waste_kg' columns."})
-
-        df["date"] = pd.to_datetime(df["date"], dayfirst=True)
-        df = df.rename(columns={"date": "ds", "waste_kg": "y"})
-
-        # 🧠 Fit Prophet model
         model = Prophet()
         model.fit(df)
 
-        # 📆 Create future dataframe (7 days)
         future = model.make_future_dataframe(periods=7)
         forecast = model.predict(future)
 
-        # 🎯 Return only last 7 predicted values
         result = forecast[["ds", "yhat"]].tail(7)
         result = result.rename(columns={"ds": "date", "yhat": "predicted_waste_kg"})
         result["date"] = result["date"].dt.strftime("%d-%m-%Y")
-        result["predicted_waste_kg"] = result["predicted_waste_kg"].round(2)
 
         return jsonify(result.to_dict(orient="records"))
-
     except Exception as e:
         return jsonify({"error": str(e)})
-
 
 
 if __name__ == '__main__':
