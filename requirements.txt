@@ -4,3 +4,5 @@ scikit-learn==1.4.2
 pandas==2.2.2
 flask-cors==3.0.10
 xgboost==1.7.6
+prophet
+gunicorn
