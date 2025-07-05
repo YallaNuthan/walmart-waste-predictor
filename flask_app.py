@@ -236,6 +236,7 @@ def forecast_waste():
 
 
 if __name__ == '__main__':
-    print("✅ Starting Flask...")
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    
+    port = int(os.environ.get("PORT", 10000))
+    print(f"✅ Starting Flask on port {port}...")
+    app.run(host='0.0.0.0', port=port)
