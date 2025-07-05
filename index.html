@@ -74,6 +74,7 @@
   <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
   <a href="javascript:void(0)" onclick="navigate('page3')">📦 Smart Recommendations</a>
   <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
+  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
 </div>
 
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
@@ -155,6 +156,17 @@
       <tr><th>Store</th><th>Total Donated</th><th>Total Reduced</th><th>Total Wasted</th><th>AI Score</th><th>🏆</th></tr>
     </thead><tbody></tbody></table>
   </div>
+</div>
+
+  <div id="page5" class="page container">
+  <h2>📉 7-Day Waste Forecast</h2>
+  <button onclick="loadWasteForecast()">📅 Load Forecast</button>
+  <table id="wasteForecastTable">
+    <thead>
+      <tr><th>Date</th><th>Predicted Waste (kg)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script>
@@ -261,6 +273,19 @@ async function loadAIMonthly() {
       <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
   });
 }
+
+async function loadWasteForecast() {
+  const res = await fetch(`${BASE}/forecast_waste`);
+  const data = await res.json();
+
+  const table = document.getElementById("wasteForecastTable").querySelector("tbody");
+  table.innerHTML = "";
+  data.forEach(row => {
+    table.innerHTML += `<tr><td>${row.date}</td><td>${row.predicted_waste_kg.toFixed(2)}</td></tr>`;
+  });
+}
+
+
 </script>
 </body>
 </html>
