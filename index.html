@@ -159,7 +159,11 @@
 </div>
 
   <div id="page5" class="page container">
-  <h2>📉 7-Day Waste Forecast</h2>
+  <h2>📉 Waste Forecast (Prophet)</h2>
+<label>Upload Waste History CSV</label>
+<input type="file" id="wasteCSV" accept=".csv">
+<button onclick="uploadWasteCSV()">Forecast Waste</button>
+<div id="wasteForecastResult" class="result"></div>
   <button onclick="loadWasteForecast()">📅 Load Forecast</button>
   <table id="wasteForecastTable">
     <thead>
@@ -272,6 +276,31 @@ async function loadAIMonthly() {
       <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
       <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
   });
+}
+
+// 📈 Upload Waste CSV and Forecast
+async function uploadWasteCSV() {
+  const file = document.getElementById("wasteCSV").files[0];
+  if (!file) return alert("Please upload a CSV file.");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${BASE}/forecast_waste`, {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await res.json();
+
+  if (result.success) {
+    document.getElementById("forecastPlot").src = "static/forecast_plot.png?" + new Date().getTime();
+    document.getElementById("forecastPlot").style.display = "block";
+    loadWasteForecast();
+    document.getElementById("wasteForecastResult").innerText = "✅ Forecast complete!";
+  } else {
+    document.getElementById("wasteForecastResult").innerText = `❌ ${result.error}`;
+  }
 }
 
 async function loadWasteForecast() {
