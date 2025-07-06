@@ -214,7 +214,10 @@ def ai_leaderboard_by_date():
 def forecast_waste():
     try:
         # ⬆️ 1. Read CSV File
-        file = request.files['file']
+        file = request.files.get('file')
+        if not file:
+            return jsonify({"error": "No file uploaded"}), 400
+
         df = pd.read_csv(file)
 
         # ✅ 2. Validate required columns
