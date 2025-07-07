@@ -263,6 +263,39 @@ def forecast_waste():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+
+@app.route("/submit_game_result", methods=["POST"])
+def submit_game_result():
+    try:
+        data = request.json
+
+        df = pd.DataFrame([{
+            "player_name": data.get("player_name", "Unknown"),
+            "waste_kg": data["waste_kg"],
+            "donation_kg": data["donation_kg"],
+            "karma_score": data["karma_score"],
+            "profit_rs": data["profit_rs"],
+            "date": datetime.now().strftime("%d-%m-%Y")
+        }])
+
+        # Append to CSV file
+        df.to_csv("game_scores.csv", mode='a', index=False, header=not os.path.exists("game_scores.csv"))
+
+        return jsonify({"status": "success", "message": "Game result saved."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+
+@app.route("/upload_game_csv", methods=["POST"])
+def upload_game_csv():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
+        return jsonify(df.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 if __name__ == '__main__':
     
     print("✅ Starting Flask...")
