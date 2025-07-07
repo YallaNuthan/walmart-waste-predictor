@@ -75,6 +75,7 @@
   <a href="javascript:void(0)" onclick="navigate('page3')">📦 Smart Recommendations</a>
   <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
   <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
+  <a href="#" onclick="showPage('page6')">🕹️ Wasteplex Simulator</a>
 </div>
 
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
@@ -177,6 +178,37 @@
     </thead>
     <tbody></tbody>
   </table>
+</div>
+
+
+  <div class="page" id="page6">
+  <h2>🕹️ Wasteplex: Retail Chaos Simulator</h2>
+  <p>Day <span id="wpDayCount">1</span> of 7</p>
+
+  <div class="control-group">
+    <label>Milk</label>
+    <input type="range" id="wpMilk" min="0" max="50">
+    <span id="wpMilkVal">0</span>
+  </div>
+  <div class="control-group">
+    <label>Bananas</label>
+    <input type="range" id="wpBanana" min="0" max="80">
+    <span id="wpBananaVal">0</span>
+  </div>
+  <div class="control-group">
+    <label>Bread</label>
+    <input type="range" id="wpBread" min="0" max="60">
+    <span id="wpBreadVal">0</span>
+  </div>
+  <div class="control-group">
+    <label>Veggies</label>
+    <input type="range" id="wpVeggie" min="0" max="100">
+    <span id="wpVeggieVal">0</span>
+  </div>
+
+  <button onclick="simulateWasteplex()">Simulate Day</button>
+
+  <div id="wpEventResult" style="margin-top: 1rem;"></div>
 </div>
 
 <script>
@@ -331,6 +363,70 @@ async function uploadWasteCSV() {
     document.getElementById("wasteForecastResult").innerText = `❌ Error: ${error.message}`;
   }
 }
+
+
+
+  <script>
+let wpDay = 1;
+const wpEvents = [
+  { name: "🔥 Heatwave", spoiler: 1.8 },
+  { name: "🎉 Festival Demand", spoiler: 0.8 },
+  { name: "❄️ Cold storage failure", spoiler: 2.2 },
+  { name: "🧊 Ice Storm", spoiler: 1.6 },
+  { name: "🪫 Power outage", spoiler: 2.0 },
+  { name: "🌞 Normal day", spoiler: 1.0 }
+];
+
+document.getElementById("wpMilk").oninput = e =>
+  document.getElementById("wpMilkVal").innerText = e.target.value;
+document.getElementById("wpBanana").oninput = e =>
+  document.getElementById("wpBananaVal").innerText = e.target.value;
+document.getElementById("wpBread").oninput = e =>
+  document.getElementById("wpBreadVal").innerText = e.target.value;
+document.getElementById("wpVeggie").oninput = e =>
+  document.getElementById("wpVeggieVal").innerText = e.target.value;
+
+function simulateWasteplex() {
+  if (wpDay > 7) {
+    alert("✅ Game completed. Reload to restart.");
+    return;
+  }
+
+  const event = wpEvents[Math.floor(Math.random() * wpEvents.length)];
+
+  const data = {
+    day: wpDay,
+    inputs: {
+      milk: document.getElementById("wpMilk").value,
+      bananas: document.getElementById("wpBanana").value,
+      bread: document.getElementById("wpBread").value,
+      veggies: document.getElementById("wpVeggie").value
+    },
+    event: event
+  };
+
+  fetch(`${BASE}/simulate_wasteplex`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+    .then(res => res.json())
+    .then(result => {
+      document.getElementById("wpEventResult").innerHTML = `
+        <h4>📅 Day ${wpDay} Event: ${event.name}</h4>
+        <p>🗑️ Waste: ${result.waste_kg} kg</p>
+        <p>❤️ Donation: ${result.donation_kg} kg</p>
+        <p>💰 Profit: ₹${result.profit}</p>
+        <p>🧘 Karma Score: ${result.karma}</p>
+        <p>🌍 Planet Mood: ${result.mood}</p>
+      `;
+      document.getElementById("wpDayCount").innerText = ++wpDay;
+    })
+    .catch(err => {
+      document.getElementById("wpEventResult").innerText = "Error: " + err;
+    });
+}
+</script>
 
 
 
