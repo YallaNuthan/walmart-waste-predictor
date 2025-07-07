@@ -286,15 +286,6 @@ def submit_game_result():
         return jsonify({"status": "error", "message": str(e)})
 
 
-@app.route("/upload_game_csv", methods=["POST"])
-def upload_game_csv():
-    try:
-        file = request.files['file']
-        df = pd.read_csv(file)
-        return jsonify(df.to_dict(orient="records"))
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
 
 if __name__ == '__main__':
     
