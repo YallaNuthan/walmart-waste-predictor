@@ -264,26 +264,79 @@ def forecast_waste():
         return jsonify({"error": str(e)})
 
 
-@app.route("/submit_game_result", methods=["POST"])
-def submit_game_result():
+@app.route('/simulate_wasteplex', methods=['POST'])
+def simulate_wasteplex():
     try:
-        data = request.json
+        data = request.get_json()
 
-        df = pd.DataFrame([{
-            "player_name": data.get("player_name", "Unknown"),
-            "waste_kg": data["waste_kg"],
-            "donation_kg": data["donation_kg"],
-            "karma_score": data["karma_score"],
-            "profit_rs": data["profit_rs"],
-            "date": datetime.now().strftime("%d-%m-%Y")
-        }])
+        day = data.get("day")
+        inputs = data.get("inputs", {})
+        event = data.get("event", {})
 
-        # Append to CSV file
-        df.to_csv("game_scores.csv", mode='a', index=False, header=not os.path.exists("game_scores.csv"))
+        if not inputs or not event:
+            return jsonify({"error": "Missing simulation input or event details"}), 400
 
-        return jsonify({"status": "success", "message": "Game result saved."})
+        # Extract quantities
+        milk = int(inputs.get("milk", 0))
+        bananas = int(inputs.get("bananas", 0))
+        bread = int(inputs.get("bread", 0))
+        veggies = int(inputs.get("veggies", 0))
+
+        total_qty = milk + bananas + bread + veggies
+
+        # Product prices (fixed logic)
+        product_prices = {
+            "milk": 40,
+            "bananas": 12,
+            "bread": 35,
+            "veggies": 20
+        }
+
+        # Calculate revenue
+        revenue = (
+            milk * product_prices["milk"] +
+            bananas * product_prices["bananas"] +
+            bread * product_prices["bread"] +
+            veggies * product_prices["veggies"]
+        ) * 0.8  # assuming 80% gets sold
+
+        # Event spoilage multiplier
+        spoilage_multiplier = float(event.get("spoiler", 1.0))
+        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)  # 20% extra spoilage logic
+        donation = int(total_qty * 0.1)  # 10% donation logic
+
+        # Cost and bonus
+        waste_cost = waste * 20
+        donation_bonus = donation * 5
+        profit = revenue - waste_cost + donation_bonus
+
+        # Karma logic
+        karma = (donation * 2 - waste) + int(profit / 100)
+
+        # Mood emoji
+        mood = "😐"
+        if waste > 70:
+            mood = "😠"
+        elif waste < 30 and donation > 10:
+            mood = "😇"
+
+        # Return result
+        result = {
+            "day": day,
+            "waste_kg": waste,
+            "donation_kg": donation,
+            "profit": round(profit, 2),
+            "karma": karma,
+            "mood": mood,
+            "timestamp": datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
+        }
+
+        return jsonify(result)
+
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+        return jsonify({"error": str(e)}), 500
+
+
 
 
 
