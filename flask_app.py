@@ -7,11 +7,10 @@ import pandas as pd
 from datetime import datetime
 from prophet import Prophet
 
-
 app = Flask(__name__)
 CORS(app)
 
-# Load Improved Models
+# Load Models
 model = joblib.load("waste_predictor_model.pkl")
 model_columns = joblib.load("model_columns.pkl")
 demand_model = joblib.load("demand_model.pkl")
@@ -21,6 +20,7 @@ ai_model = joblib.load("ai_score_model.pkl")
 def home():
     return "Walmart Waste Predictor API is running!"
 
+# === SMART BULK RECOMMENDATIONS ===
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     try:
@@ -64,13 +64,12 @@ def upload_csv():
 
         df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-        # Final recommendations table
         recommendations = df[[
             "product_id", "name", "store_location", "category", "stock", "freshness_score",
             "expiry_status", "daily_demand", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
-        # Smart Alert logic
+        # Alerts
         alerts_df = df[
             (df["days_to_expiry"] < 1) |
             ((df["stock"] > 50) & (df["daily_demand"] < 10)) |
@@ -82,7 +81,7 @@ def upload_csv():
                 return "❗ Expiring Today"
             elif row["stock"] > 50 and row["daily_demand"] < 10:
                 return "📉 Overstocked, Low Demand"
-            elif row["daily_demand"] > 80 and row["stock"] < 20 and row["days_to_expiry"] > 1:
+            elif row["daily_demand"] > 80 and row["stock"] < 20:
                 return "⚡ Demand Surge, Low Stock"
             return "Unknown"
 
@@ -99,14 +98,14 @@ def upload_csv():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+# === DEMAND, RISK, RECOMMEND ===
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         json_ = request.json
         query = [json_[col] for col in model_columns]
         prediction = model.predict([query])[0]
-        label = "High Risk" if prediction == 1 else "Low Risk"
-        return jsonify({'prediction': label})
+        return jsonify({'prediction': "High Risk" if prediction else "Low Risk"})
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -139,14 +138,51 @@ def recommend_action():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# === AI Leaderboard unchanged ===
+# === WASTE FORECAST (Page 5) ===
+@app.route("/forecast_waste", methods=["POST"])
+def forecast_waste():
+    try:
+        file = request.files.get('file')
+        if not file:
+            return jsonify({"error": "No file uploaded"}), 400
 
+        df = pd.read_csv(file)
+        expected_columns = {"store_location", "item_name", "date", "waste_kg"}
+        if not expected_columns.issubset(df.columns):
+            return jsonify({"error": f"Missing required columns: {expected_columns}"}), 400
+
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce")
+        df = df.dropna(subset=["date", "waste_kg"])
+        df["waste_kg"] = pd.to_numeric(df["waste_kg"], errors="coerce")
+
+        results = []
+        grouped = df.groupby(["store_location", "item_name"])
+        for (store, item), group_df in grouped:
+            group_df = group_df.rename(columns={"date": "ds", "waste_kg": "y"}).sort_values("ds")
+            if len(group_df) < 2:
+                continue
+            model = Prophet()
+            model.fit(group_df[["ds", "y"]])
+            forecast = model.predict(model.make_future_dataframe(periods=7))
+            forecast_result = forecast[["ds", "yhat"]].tail(7)
+            forecast_result["ds"] = forecast_result["ds"].dt.strftime("%d-%m-%Y")
+            for _, row in forecast_result.iterrows():
+                results.append({
+                    "store_location": store,
+                    "item_name": item,
+                    "date": row["ds"],
+                    "predicted_waste_kg": round(row["yhat"], 2)
+                })
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# === AI LEADERBOARD (Page 4) ===
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
-    pd.DataFrame(columns=[
-        "store_location", "waste_donated_kg", "waste_reduced_kg",
-        "waste_generated_kg", "date", "ai_score"
-    ]).to_csv(LEADERBOARD_FILE, index=False)
+    pd.DataFrame(columns=["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "ai_score"]).to_csv(LEADERBOARD_FILE, index=False)
 
 @app.route("/upload_waste_ai", methods=["POST"])
 def upload_waste_ai():
@@ -197,78 +233,24 @@ def ai_monthly_leaderboard():
 @app.route("/ai_leaderboard_by_date", methods=["GET"])
 def ai_leaderboard_by_date():
     try:
-        selected_date_str = request.args.get("date")
-        if not selected_date_str:
-            return jsonify({"error": "Date parameter is missing."})
-        selected_date = datetime.strptime(selected_date_str, "%d-%m-%Y").date()
+        date_str = request.args.get("date")
+        if not date_str:
+            return jsonify({"error": "Date parameter missing"}), 400
+        date_obj = datetime.strptime(date_str, "%d-%m-%Y").date()
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
-        result = df[df["date"] == selected_date].drop_duplicates("store_location")
+        result = df[df["date"] == date_obj].drop_duplicates("store_location")
         result = result.sort_values("ai_score", ascending=False).reset_index(drop=True)
         result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
         return jsonify(result.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
 
-@app.route("/forecast_waste", methods=["POST"])
-def forecast_waste():
-    try:
-        # ⬆️ 1. Read CSV File
-        file = request.files.get('file')
-        if not file:
-            return jsonify({"error": "No file uploaded"}), 400
-
-        df = pd.read_csv(file)
-
-        # ✅ 2. Validate required columns
-        expected_columns = {"store_location", "item_name", "date", "waste_kg"}
-        if not expected_columns.issubset(df.columns):
-            return jsonify({"error": f"Missing required columns: {expected_columns}"}), 400
-
-        # 🗓️ 3. Parse date and rename columns for Prophet
-        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce")
-        df = df.dropna(subset=["date", "waste_kg"])
-        df["waste_kg"] = pd.to_numeric(df["waste_kg"], errors="coerce")
-
-        results = []
-
-        # 🔁 4. Forecast for each store-item group
-        grouped = df.groupby(["store_location", "item_name"])
-        for (store, item), group_df in grouped:
-            group_df = group_df.rename(columns={"date": "ds", "waste_kg": "y"})
-            group_df = group_df[["ds", "y"]].sort_values("ds")
-
-            if len(group_df) < 2:
-                continue  # Prophet needs at least 2 rows
-
-            model = Prophet()
-            model.fit(group_df)
-
-            future = model.make_future_dataframe(periods=7)
-            forecast = model.predict(future)
-
-            forecast_result = forecast[["ds", "yhat"]].tail(7)
-            forecast_result["ds"] = forecast_result["ds"].dt.strftime("%d-%m-%Y")
-
-            for _, row in forecast_result.iterrows():
-                results.append({
-                    "store_location": store,
-                    "item_name": item,
-                    "date": row["ds"],
-                    "predicted_waste_kg": round(row["yhat"], 2)
-                })
-
-        return jsonify(results)
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-
+# === 🎮 WASTEPLEX SIMULATOR (Page 6) ===
 @app.route('/simulate_wasteplex', methods=['POST'])
 def simulate_wasteplex():
     try:
         data = request.get_json()
-
         day = data.get("day")
         inputs = data.get("inputs", {})
         event = data.get("event", {})
@@ -276,7 +258,6 @@ def simulate_wasteplex():
         if not inputs or not event:
             return jsonify({"error": "Missing simulation input or event details"}), 400
 
-        # Extract quantities
         milk = int(inputs.get("milk", 0))
         bananas = int(inputs.get("bananas", 0))
         bread = int(inputs.get("bread", 0))
@@ -284,64 +265,39 @@ def simulate_wasteplex():
 
         total_qty = milk + bananas + bread + veggies
 
-        # Product prices (fixed logic)
         product_prices = {
-            "milk": 40,
-            "bananas": 12,
-            "bread": 35,
-            "veggies": 20
+            "milk": 40, "bananas": 12, "bread": 35, "veggies": 20
         }
 
-        # Calculate revenue
         revenue = (
             milk * product_prices["milk"] +
             bananas * product_prices["bananas"] +
             bread * product_prices["bread"] +
             veggies * product_prices["veggies"]
-        ) * 0.8  # assuming 80% gets sold
+        ) * 0.8  # 80% sold
 
-        # Event spoilage multiplier
         spoilage_multiplier = float(event.get("spoiler", 1.0))
-        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)  # 20% extra spoilage logic
-        donation = int(total_qty * 0.1)  # 10% donation logic
-
-        # Cost and bonus
-        waste_cost = waste * 20
-        donation_bonus = donation * 5
-        profit = revenue - waste_cost + donation_bonus
-
-        # Karma logic
+        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)
+        donation = int(total_qty * 0.1)
+        profit = revenue - waste * 20 + donation * 5
         karma = (donation * 2 - waste) + int(profit / 100)
-
-        # Mood emoji
         mood = "😐"
-        if waste > 70:
-            mood = "😠"
-        elif waste < 30 and donation > 10:
-            mood = "😇"
+        if waste > 70: mood = "😠"
+        elif waste < 30 and donation > 10: mood = "😇"
 
-        # Return result
-        result = {
+        return jsonify({
             "day": day,
             "waste_kg": waste,
             "donation_kg": donation,
             "profit": round(profit, 2),
             "karma": karma,
             "mood": mood,
-            "timestamp": datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
-        }
-
-        return jsonify(result)
-
+            "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M")
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
-
-
 if __name__ == '__main__':
-    
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
