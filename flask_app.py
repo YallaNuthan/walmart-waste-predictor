@@ -245,32 +245,51 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === NEW: RETAIL SUSTAINABILITY SIMULATOR (Page 6) ===
+# === 🎮 RETAIL SUSTAINABILITY SIMULATOR (Page 6) ===
 @app.route('/simulate_day', methods=['POST'])
 def simulate_day():
     try:
-        data = request.json
-        stock = int(data.get("stock", 0))
-        temperature = float(data.get("temperature", 25))
-        action = data.get("action", "redistribute")
+        data = request.get_json()
+        day = data.get("day")
+        inputs = data.get("inputs", {})
+        event = data.get("event", {})
 
-        waste = max(0, int(stock * (temperature - 25) * 0.02)) if temperature > 25 else 0
-        donation = int(stock * 0.1) if action == "redistribute" else 0
-        loss = waste * 15
+        if not inputs or not event:
+            return jsonify({"error": "Missing simulation input or event details"}), 400
 
-        sustainability_score = 100 - waste - loss / 10 + donation * 2
-        mood = "🌎 Excellent" if sustainability_score >= 90 else \
-               "⚠️ Moderate" if sustainability_score >= 70 else \
-               "🚨 Poor"
+        milk = int(inputs.get("milk", 0))
+        bananas = int(inputs.get("bananas", 0))
+        bread = int(inputs.get("bread", 0))
+        veggies = int(inputs.get("veggies", 0))
+
+        total_qty = milk + bananas + bread + veggies
+
+        product_prices = {
+            "milk": 40, "bananas": 12, "bread": 35, "veggies": 20
+        }
+
+        revenue = (
+            milk * product_prices["milk"] +
+            bananas * product_prices["bananas"] +
+            bread * product_prices["bread"] +
+            veggies * product_prices["veggies"]
+        ) * 0.8  # 80% sold
+
+        spoilage_multiplier = float(event.get("spoiler", 1.0))
+        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)
+        donation = int(total_qty * 0.1)
+        profit = revenue - waste * 20 + donation * 5
+        karma = (donation * 2 - waste) + int(profit / 100)
+        mood = "😐"
+        if waste > 70: mood = "😠"
+        elif waste < 30 and donation > 10: mood = "😇"
 
         return jsonify({
-            "stock": stock,
-            "temperature": temperature,
-            "action": action,
-            "waste": waste,
-            "donation": donation,
-            "loss": loss,
-            "sustainability_score": round(sustainability_score, 2),
+            "day": day,
+            "waste_kg": waste,
+            "donation_kg": donation,
+            "profit": round(profit, 2),
+            "karma": karma,
             "mood": mood,
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M")
         })
