@@ -95,42 +95,53 @@
 <script>
 let simDay = 1, simProfit = 0, simWaste = 0, simDonate = 0, simKarma = 0;
 let upgrades = { solar: false, cold: false, donate: false };
-const events = [
-  { name: "🌞 Normal Day", impact: 1.0 },
-  { name: "🔥 Heatwave", impact: 1.6 },
-  { name: "🌧️ Rainy Day", impact: 1.2 },
-  { name: "⚡ Power Cut", impact: 1.4 },
-  { name: "🎉 Festival Rush", impact: 0.7 }
-];
 
 function simulateDay() {
   if (simDay > 7) return alert("🏁 Simulation complete. Restart to try again.");
-  const event = events[Math.floor(Math.random() * events.length)];
+
+  const event = getRandomEvent();
   document.getElementById("eventLabel").innerText = event.name;
 
-  let waste = Math.round(Math.random() * 20 * event.impact);
-  let donation = Math.round(Math.random() * 15);
-  let profit = Math.round(800 + Math.random() * 400);
+  const inputs = {
+    milk: Math.floor(Math.random() * 10 + 5),
+    bananas: Math.floor(Math.random() * 20 + 5),
+    bread: Math.floor(Math.random() * 15 + 5),
+    veggies: Math.floor(Math.random() * 25 + 5)
+  };
 
-  if (upgrades.solar) simKarma += 3;
-  if (upgrades.cold) waste = Math.max(0, waste - 5);
-  if (upgrades.donate) donation += 5;
+  fetch("http://localhost:5000/simulate_day", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ day: simDay, inputs: inputs, event: { spoiler: event.impact } })
+  })
+  .then(res => res.json())
+  .then(data => {
+    simProfit += data.profit;
+    simWaste += data.waste_kg;
+    simDonate += data.donation_kg;
+    simKarma += data.karma;
 
-  simProfit += profit;
-  simWaste += waste;
-  simDonate += donation;
-  simKarma += Math.round((donation * 1.5 - waste / 2) + profit / 500);
+    document.getElementById("simDay").innerText = simDay;
+    document.getElementById("simProfit").innerText = simProfit;
+    document.getElementById("simWaste").innerText = simWaste;
+    document.getElementById("simDonate").innerText = simDonate;
+    document.getElementById("simKarma").innerText = simKarma;
+    document.getElementById("simMood").innerText = data.mood;
 
-  let mood = simKarma > 40 ? "😇" : simKarma < 0 ? "😡" : "🙂";
+    simDay++;
+  })
+  .catch(err => alert("Simulation failed. Please ensure backend is running.\n" + err));
+}
 
-  document.getElementById("simDay").innerText = simDay;
-  document.getElementById("simProfit").innerText = simProfit;
-  document.getElementById("simWaste").innerText = simWaste;
-  document.getElementById("simDonate").innerText = simDonate;
-  document.getElementById("simKarma").innerText = simKarma;
-  document.getElementById("simMood").innerText = mood;
-
-  simDay++;
+function getRandomEvent() {
+  const events = [
+    { name: "🌞 Normal Day", impact: 1.0 },
+    { name: "🔥 Heatwave", impact: 1.6 },
+    { name: "🌧️ Rainy Day", impact: 1.2 },
+    { name: "⚡ Power Cut", impact: 1.4 },
+    { name: "🎉 Festival Rush", impact: 0.7 }
+  ];
+  return events[Math.floor(Math.random() * events.length)];
 }
 
 function applyUpgrade(type) {
