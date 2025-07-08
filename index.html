@@ -57,16 +57,13 @@
     .alert-item {
       border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
     }
-    .control-group {
-      margin-bottom: 20px;
+    .sim-box {
+      background: #f0f8ff; border-radius: 8px; padding: 20px; margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
-    .animate-pulse {
-      animation: pulse 0.5s ease-out;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); background-color: #fefefe; }
-      50% { transform: scale(1.05); background-color: #c2f0ff; }
-      100% { transform: scale(1); background-color: #fff; }
+    .sim-result p {
+      font-size: 16px;
+      margin: 8px 0;
     }
   </style>
 </head>
@@ -74,12 +71,7 @@
 
 <!-- Sidebar & Navigation -->
 <div id="mySidebar" class="sidebar">
-  <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
-  <a href="javascript:void(0)" onclick="navigate('page3')">📦 Smart Recommendations</a>
-  <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
-  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page6')">🕹️ Wasteplex Simulator</a>
+  <a href="javascript:void(0)" onclick="navigate('page6')">🧠 Retail Sustainability Simulator</a>
 </div>
 
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
@@ -93,66 +85,18 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- Page 1: Demand Forecast -->
-  <div id="page1" class="page container">
-    <h2>📈 Demand Forecast</h2>
-    <p style="text-align: center;">Coming soon...</p>
-  </div>
-
-  <!-- Page 2: Waste Risk -->
-  <div id="page2" class="page container">
-    <h2>🗑 Waste Risk</h2>
-    <p style="text-align: center;">Coming soon...</p>
-  </div>
-
-  <!-- Page 3: Smart Recommendations -->
-  <div id="page3" class="page container">
-    <h2>📦 Smart Recommendations</h2>
-    <p style="text-align: center;">Coming soon...</p>
-  </div>
-
-  <!-- Page 4: AI Leaderboard -->
-  <div id="page4" class="page container">
-    <h2>🏁 AI Leaderboard</h2>
-    <p style="text-align: center;">Coming soon...</p>
-  </div>
-
-  <!-- Page 5: Waste Forecast -->
-  <div id="page5" class="page container">
-    <h2>📉 Waste Forecast</h2>
-    <p style="text-align: center;">Coming soon...</p>
-  </div>
-
-  <!-- Page 6: Wasteplex Simulator -->
+  <!-- Page 6: Retail Simulation -->
   <div class="page container" id="page6">
-    <h2>🕹️ Wasteplex: Retail Chaos Simulator</h2>
-    <p>Day <span id="wpDayCount">1</span> of 7</p>
-
-    <div class="control-group">
-      <label>Milk</label>
-      <input type="range" id="wpMilk" min="0" max="50" value="0">
-      <span id="wpMilkVal">0</span>
+    <h2>🌿 Retail Simulation for a Responsible Future</h2>
+    <div class="sim-box">
+      <p><strong>Day:</strong> <span id="simDay">1</span> / 7</p>
+      <p><strong>Scenario:</strong> <span id="simEvent">🌞 Normal Day</span></p>
+      <div class="sim-result" id="simResult">
+        <p>Click "Next Day" to start simulation</p>
+      </div>
+      <button onclick="simulateDay()">▶️ Next Day</button>
+      <button onclick="restartSim()">🔄 Restart</button>
     </div>
-    <div class="control-group">
-      <label>Bananas</label>
-      <input type="range" id="wpBanana" min="0" max="80" value="0">
-      <span id="wpBananaVal">0</span>
-    </div>
-    <div class="control-group">
-      <label>Bread</label>
-      <input type="range" id="wpBread" min="0" max="60" value="0">
-      <span id="wpBreadVal">0</span>
-    </div>
-    <div class="control-group">
-      <label>Veggies</label>
-      <input type="range" id="wpVeggie" min="0" max="100" value="0">
-      <span id="wpVeggieVal">0</span>
-    </div>
-
-    <button onclick="simulateWasteplex()">Simulate Day</button>
-    <button onclick="resetWasteplex()">Restart Game 🔄</button>
-
-    <div id="wpEventResult" style="margin-top: 1rem;"></div>
   </div>
 </div>
 
@@ -160,22 +104,16 @@
 <script>
 const BASE = "https://walmart-waste-predictor.onrender.com";
 let latestAlerts = [];
-let wpDay = 1;
+let simDay = 1;
 
-const wpEvents = [
-  { name: "🔥 Heatwave", spoiler: 1.8 },
-  { name: "🎉 Festival Demand", spoiler: 0.8 },
-  { name: "❄️ Cold storage failure", spoiler: 2.2 },
-  { name: "🧊 Ice Storm", spoiler: 1.6 },
-  { name: "🪫 Power outage", spoiler: 2.0 },
-  { name: "🌞 Normal day", spoiler: 1.0 }
+const simEvents = [
+  { name: "🔥 Heatwave", impact: 1.8 },
+  { name: "🎉 Festival Demand", impact: 0.7 },
+  { name: "❄️ Cold Storage Breakdown", impact: 2.1 },
+  { name: "💡 Power Cut", impact: 1.5 },
+  { name: "🌧️ Heavy Rainfall", impact: 1.3 },
+  { name: "🌞 Normal Day", impact: 1.0 }
 ];
-
-["Milk", "Banana", "Bread", "Veggie"].forEach(item => {
-  document.getElementById("wp" + item).oninput = e => {
-    document.getElementById("wp" + item + "Val").innerText = e.target.value;
-  };
-});
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
@@ -207,75 +145,38 @@ function toggleAlerts() {
   }
 }
 
-function simulateWasteplex() {
-  if (wpDay > 7) {
-    alert("✅ Game completed. Please restart.");
+function simulateDay() {
+  if (simDay > 7) {
+    alert("✅ Simulation complete. Restart to try again.");
     return;
   }
 
-  const event = wpEvents[Math.floor(Math.random() * wpEvents.length)];
-  const data = {
-    day: wpDay,
-    inputs: {
-      milk: document.getElementById("wpMilk").value,
-      bananas: document.getElementById("wpBanana").value,
-      bread: document.getElementById("wpBread").value,
-      veggies: document.getElementById("wpVeggie").value
-    },
-    event: event
-  };
+  const event = simEvents[Math.floor(Math.random() * simEvents.length)];
+  document.getElementById("simDay").innerText = simDay;
+  document.getElementById("simEvent").innerText = event.name;
 
-  playSound();
-  animateSimulator();
+  // Dummy simulation logic
+  const waste = Math.round(Math.random() * 30 * event.impact);
+  const donation = Math.round(Math.random() * 20);
+  const profit = Math.round(1000 - waste * 5 + donation * 2);
+  const karma = Math.round(donation * 2 - waste + profit / 100);
+  const mood = karma > 20 ? "😇" : karma < -10 ? "😞" : "🙂";
 
-  fetch(`${BASE}/simulate_wasteplex`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  })
-    .then(res => res.json())
-    .then(result => {
-      document.getElementById("wpEventResult").innerHTML = `
-        <h4>📅 Day ${wpDay} Event: ${event.name}</h4>
-        <p>🗑️ Waste: ${result.waste_kg} kg</p>
-        <p>❤️ Donation: ${result.donation_kg} kg</p>
-        <p>💰 Profit: ₹${result.profit}</p>
-        <p>🧘 Karma Score: ${result.karma}</p>
-        <p>🌍 Planet Mood: ${result.mood}</p>
-      `;
-      document.getElementById("wpDayCount").innerText = ++wpDay;
-    })
-    .catch(err => {
-      document.getElementById("wpEventResult").innerText = "Error: " + err;
-    });
+  document.getElementById("simResult").innerHTML = `
+    <p>🗑️ Waste Generated: <strong>${waste} kg</strong></p>
+    <p>❤️ Donations Made: <strong>${donation} kg</strong></p>
+    <p>💰 Profit Earned: <strong>₹${profit}</strong></p>
+    <p>🧘 Karma Score: <strong>${karma}</strong></p>
+    <p>🌍 Planet Mood: <strong>${mood}</strong></p>
+  `;
+  simDay++;
 }
 
-function resetWasteplex() {
-  wpDay = 1;
-  document.getElementById("wpDayCount").innerText = wpDay;
-  ["Milk", "Banana", "Bread", "Veggie"].forEach(item => {
-    document.getElementById("wp" + item).value = 0;
-    document.getElementById("wp" + item + "Val").innerText = "0";
-  });
-  document.getElementById("wpEventResult").innerHTML = "";
-}
-
-function playSound() {
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "triangle";
-  osc.frequency.setValueAtTime(600, ctx.currentTime);
-  gain.gain.setValueAtTime(0.1, ctx.currentTime);
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.2);
-}
-
-function animateSimulator() {
-  const simPage = document.getElementById("page6");
-  simPage.classList.add("animate-pulse");
-  setTimeout(() => simPage.classList.remove("animate-pulse"), 500);
+function restartSim() {
+  simDay = 1;
+  document.getElementById("simDay").innerText = simDay;
+  document.getElementById("simEvent").innerText = "🌞 Normal Day";
+  document.getElementById("simResult").innerHTML = `<p>Click "Next Day" to start simulation</p>`;
 }
 </script>
 </body>
