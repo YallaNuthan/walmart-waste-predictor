@@ -6,7 +6,7 @@
   <title>Walmart Waste Predictor</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; overflow-x: hidden; }
     .sidebar { height: 100%; width: 250px; position: fixed; top: 0; left: -250px; background-color: #003087; overflow-x: hidden; transition: 0.3s; padding-top: 60px; z-index: 1000; }
     .sidebar a { padding: 16px 24px; text-decoration: none; font-size: 18px; color: #fff; display: block; }
     .sidebar a:hover { background-color: #0050c2; }
@@ -16,112 +16,145 @@
     #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
     .container { background-color: white; border-radius: 10px; padding: 30px; margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     h2 { text-align: center; color: #003087; }
-    label { display: block; margin: 10px 0 6px; font-weight: bold; }
-    input, select { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #ccc; }
     button { background-color: #0071ce; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 10px 8px 0; }
     button:hover { background-color: #005bbb; }
     .page { display: none; }
     .active { display: block !important; }
     .welcome { text-align: center; margin-top: 100px; font-size: 26px; color: #003087; padding: 0 20px; }
-    .alert-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; }
-    .sim-box { background: #f0f8ff; border-radius: 8px; padding: 20px; margin-top: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.05); }
+    .sim-box { background: #eaf7ec; border-radius: 8px; padding: 20px; margin-top: 20px; animation: fadeIn 1s ease-in-out; }
     .sim-result p { font-size: 16px; margin: 8px 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #0071ce; color: white; }
-    td { background-color: #f9f9f9; }
-    .date-picker { margin: 10px 0; }
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    .upgrade-card { border: 2px dashed #6b8e23; border-radius: 10px; padding: 15px; margin-top: 15px; background: #fdfdfd; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0% {box-shadow: 0 0 0 0 rgba(107, 142, 35, 0.5);}
+      70% {box-shadow: 0 0 0 10px rgba(107, 142, 35, 0);}
+      100% {box-shadow: 0 0 0 0 rgba(107, 142, 35, 0);}
+    }
+    .store-scoreboard p { margin: 6px 0; font-size: 15px; }
+    .game-header { font-size: 20px; font-weight: bold; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
 <body>
 
+<!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
   <a href="javascript:void(0)" onclick="navigate('page1')">📦 Smart Bulk Recommendations</a>
   <a href="javascript:void(0)" onclick="navigate('page2')">⚠️ Waste Risk Predictor</a>
   <a href="javascript:void(0)" onclick="navigate('page3')">📊 Demand Forecast</a>
   <a href="javascript:void(0)" onclick="navigate('page4')">🏆 AI Leaderboard</a>
   <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page6')">🌿 Retail Simulation Game</a>
+  <a href="javascript:void(0)" onclick="navigate('page6')">🎮 Simulation Game</a>
 </div>
 
+<!-- Top Buttons -->
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
 <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
 <div id="alertBox" class="alert-box"></div>
 
+<!-- Main Content -->
 <div id="main">
   <div id="welcome" class="welcome">
     <h1>👋 Welcome to Walmart Waste Predictor</h1>
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <div class="page container" id="page1">
-    <h2>📦 Smart Bulk Recommendations</h2>
-    <input type="file" id="bulkFile" accept=".csv">
-    <button onclick="uploadBulk()">Upload & Analyze</button>
-    <div id="bulkResult"></div>
-  </div>
+  <!-- Pages -->
+  <div class="page container" id="page1"><h2>Page 1</h2></div>
+  <div class="page container" id="page2"><h2>Page 2</h2></div>
+  <div class="page container" id="page3"><h2>Page 3</h2></div>
+  <div class="page container" id="page4"><h2>Page 4</h2></div>
+  <div class="page container" id="page5"><h2>Page 5</h2></div>
 
-  <div class="page container" id="page2">
-    <h2>⚠️ Waste Risk Predictor</h2>
-    <label>Previous Sales</label><input id="wrSales" type="number">
-    <label>Stock</label><input id="wrStock" type="number">
-    <label>Temperature (°C)</label><input id="wrTemp" type="number">
-    <label>Freshness Score (0-1)</label><input id="wrFresh" type="number" step="0.01" min="0" max="1">
-    <label>Expiry Days Left</label><input id="wrExpiry" type="number">
-    <button onclick="predictRisk()">Predict Risk</button>
-    <div id="riskOutput"></div>
-  </div>
-
-  <div class="page container" id="page3">
-    <h2>📊 Demand Forecast</h2>
-    <label>Previous Sales</label><input id="dfSales" type="number">
-    <label>Stock</label><input id="dfStock" type="number">
-    <label>Temperature (°C)</label><input id="dfTemp" type="number">
-    <button onclick="forecastDemand()">Forecast</button>
-    <div id="forecastOutput"></div>
-  </div>
-
-  <div class="page container" id="page4">
-    <h2>🏆 AI Leaderboard</h2>
-    <input type="file" id="aiFile" accept=".csv">
-    <button onclick="uploadAI()">Upload Waste Report</button>
-    <button onclick="loadLeaderboard('daily')">Daily Leaderboard</button>
-    <button onclick="loadLeaderboard('monthly')">Monthly Leaderboard</button>
-    <input type="date" class="date-picker" id="leaderDate">
-    <button onclick="loadLeaderboard('date')">View By Date</button>
-    <div id="aiLeaderboard"></div>
-  </div>
-
-  <div class="page container" id="page5">
-    <h2>📉 Waste Forecast</h2>
-    <input type="file" id="wasteCSV" accept=".csv">
-    <button onclick="uploadWasteCSV()">Upload & Forecast</button>
-    <div id="wasteForecastResult"></div>
-  </div>
-
+  <!-- === PAGE 6: RETAIL VIDEO GAME SIMULATION === -->
   <div class="page container" id="page6">
-    <h2>🌿 Retail Simulation for a Responsible Future</h2>
+    <h2>🎮 Retail Rush: Build a Sustainable Empire</h2>
     <div class="sim-box">
-      <p><strong>Day:</strong> <span id="simDay">1</span> / 7</p>
-      <p><strong>Scenario:</strong> <span id="simEvent">🌞 Normal Day</span></p>
-      <div class="sim-result" id="simResult">
-        <p>Click "Next Day" to start simulation</p>
+      <div class="game-header">🛒 Day <span id="simDay">1</span> / 7 - <span id="eventLabel">🌞 Normal Day</span></div>
+      <div class="store-scoreboard">
+        <p>💰 Profit: ₹<span id="simProfit">0</span></p>
+        <p>🧘 Karma: <span id="simKarma">0</span></p>
+        <p>🗑️ Waste: <span id="simWaste">0</span> kg</p>
+        <p>❤️ Donations: <span id="simDonate">0</span> kg</p>
+        <p>🌍 Planet Mood: <span id="simMood">🙂</span></p>
       </div>
-      <button onclick="simulateDay()">▶️ Next Day</button>
-      <button onclick="restartSim()">🔄 Restart</button>
+
+      <div class="upgrade-card">
+        <strong>💡 Choose Your Upgrade:</strong><br><br>
+        <button onclick="applyUpgrade('solar')">☀️ Solar Panels (+Karma)</button>
+        <button onclick="applyUpgrade('cold')">❄️ Smart Cold Storage (-Waste)</button>
+        <button onclick="applyUpgrade('donate')">🤝 NGO Partnership (+Donations)</button>
+      </div>
+
+      <br><button onclick="simulateDay()">▶️ Next Day</button>
+      <button onclick="restartSim()">🔄 Restart Game</button>
     </div>
   </div>
 </div>
 
+<!-- JS -->
 <script>
-const BASE = "https://walmart-waste-predictor.onrender.com";
-let latestAlerts = [];
+let simDay = 1, simProfit = 0, simWaste = 0, simDonate = 0, simKarma = 0;
+let upgrades = { solar: false, cold: false, donate: false };
+const events = [
+  { name: "🌞 Normal Day", impact: 1.0 },
+  { name: "🔥 Heatwave", impact: 1.6 },
+  { name: "🌧️ Rainy Day", impact: 1.2 },
+  { name: "⚡ Power Cut", impact: 1.4 },
+  { name: "🎉 Festival Rush", impact: 0.7 }
+];
+
+function simulateDay() {
+  if (simDay > 7) return alert("🏁 Simulation complete. Restart to try again.");
+  const event = events[Math.floor(Math.random() * events.length)];
+  document.getElementById("eventLabel").innerText = event.name;
+
+  let waste = Math.round(Math.random() * 20 * event.impact);
+  let donation = Math.round(Math.random() * 15);
+  let profit = Math.round(800 + Math.random() * 400);
+
+  if (upgrades.solar) simKarma += 3;
+  if (upgrades.cold) waste = Math.max(0, waste - 5);
+  if (upgrades.donate) donation += 5;
+
+  simProfit += profit;
+  simWaste += waste;
+  simDonate += donation;
+  simKarma += Math.round((donation * 1.5 - waste / 2) + profit / 500);
+
+  let mood = simKarma > 40 ? "😇" : simKarma < 0 ? "😡" : "🙂";
+
+  document.getElementById("simDay").innerText = simDay;
+  document.getElementById("simProfit").innerText = simProfit;
+  document.getElementById("simWaste").innerText = simWaste;
+  document.getElementById("simDonate").innerText = simDonate;
+  document.getElementById("simKarma").innerText = simKarma;
+  document.getElementById("simMood").innerText = mood;
+
+  simDay++;
+}
+
+function applyUpgrade(type) {
+  if (upgrades[type]) return alert("Already activated!");
+  upgrades[type] = true;
+  alert(`✅ Upgrade activated: ${type}`);
+}
+
+function restartSim() {
+  simDay = 1; simProfit = 0; simWaste = 0; simDonate = 0; simKarma = 0;
+  upgrades = { solar: false, cold: false, donate: false };
+  document.getElementById("simDay").innerText = simDay;
+  document.getElementById("simProfit").innerText = 0;
+  document.getElementById("simWaste").innerText = 0;
+  document.getElementById("simDonate").innerText = 0;
+  document.getElementById("simKarma").innerText = 0;
+  document.getElementById("simMood").innerText = "🙂";
+  document.getElementById("eventLabel").innerText = "🌞 Normal Day";
+}
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
-
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -129,157 +162,12 @@ function navigate(id) {
   document.getElementById("alertBox").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
 }
-
 function toggleAlerts() {
   const box = document.getElementById("alertBox");
   box.style.display = box.style.display === "block" ? "none" : "block";
-  box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
-  if (!latestAlerts.length) {
-    box.innerHTML += "<p>No critical alerts!</p>";
-  } else {
-    latestAlerts.forEach(alert => {
-      box.innerHTML += `<div class="alert-item">
-        🔎 <b>${alert.name}</b> (${alert.store_location})<br>
-        📦 Stock: ${alert.stock}, 📈 Demand: ${alert.daily_demand}<br>
-        🧾 Expiry: ${alert.expiry_date}<br>
-        🧠 Alert: <b>${alert.alert_reason}</b>
-      </div>`;
-    });
-  }
-}
-
-async function uploadBulk() {
-  const file = document.getElementById("bulkFile").files[0];
-  if (!file) return alert("Please upload a CSV file.");
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${BASE}/upload_csv`, { method: "POST", body: formData });
-  const data = await res.json();
-  if (!data.success) return alert("Error: " + data.error);
-  latestAlerts = data.alerts;
-  const rows = data.recommendations.map(r =>
-    `<tr><td>${r.product_id}</td><td>${r.name}</td><td>${r.store_location}</td><td>${r.category}</td>
-     <td>${r.stock}</td><td>${r.freshness_score}</td><td>${r.expiry_status}</td>
-     <td>${r.daily_demand}</td><td>${r.expiry_risk}</td><td>${r.recommendation}</td></tr>`);
-  document.getElementById("bulkResult").innerHTML = `
-    <table><tr><th>ID</th><th>Name</th><th>Location</th><th>Category</th><th>Stock</th>
-    <th>Freshness</th><th>Expiry</th><th>Demand</th><th>Risk</th><th>Recommendation</th></tr>
-    ${rows.join("")}</table>`;
-}
-
-async function predictRisk() {
-  const body = {
-    previous_sales: +document.getElementById("wrSales").value,
-    stock: +document.getElementById("wrStock").value,
-    temperature_C: +document.getElementById("wrTemp").value,
-    freshness_score: +document.getElementById("wrFresh").value,
-    expiry_days_left: +document.getElementById("wrExpiry").value
-  };
-  const res = await fetch(`${BASE}/predict`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  document.getElementById("riskOutput").innerText = "Prediction: " + (data.prediction || data.error);
-}
-
-async function forecastDemand() {
-  const body = {
-    previous_sales: +document.getElementById("dfSales").value,
-    stock: +document.getElementById("dfStock").value,
-    temperature_C: +document.getElementById("dfTemp").value
-  };
-  const res = await fetch(`${BASE}/forecast_demand`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  document.getElementById("forecastOutput").innerText = "Forecasted Demand: " + (data.forecasted_demand || data.error);
-}
-
-async function uploadAI() {
-  const file = document.getElementById("aiFile").files[0];
-  if (!file) return alert("Please upload file.");
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${BASE}/upload_waste_ai`, { method: "POST", body: formData });
-  const data = await res.json();
-  alert(data.message || data.error);
-}
-
-async function loadLeaderboard(type) {
-  let url = `${BASE}/ai_daily_leaderboard`;
-  if (type === "monthly") url = `${BASE}/ai_monthly_leaderboard`;
-  else if (type === "date") {
-    const date = document.getElementById("leaderDate").value;
-    if (!date) return alert("Select a date!");
-    const formatted = date.split("-").reverse().join("-");
-    url = `${BASE}/ai_leaderboard_by_date?date=${formatted}`;
-  }
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.error) return alert("Error: " + data.error);
-  const rows = data.map(d =>
-    `<tr><td>${d.store_location}</td><td>${d.waste_donated_kg}</td><td>${d.waste_reduced_kg}</td>
-     <td>${d.waste_generated_kg}</td><td>${d.ai_score}</td><td>${d.badge}</td></tr>`);
-  document.getElementById("aiLeaderboard").innerHTML = `
-    <table><tr><th>Store</th><th>Donated</th><th>Reduced</th><th>Generated</th><th>AI Score</th><th>Badge</th></tr>
-    ${rows.join("")}</table>`;
-}
-
-async function uploadWasteCSV() {
-  const file = document.getElementById("wasteCSV").files[0];
-  if (!file) return alert("Upload CSV first.");
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${BASE}/forecast_waste`, { method: "POST", body: formData });
-  const data = await res.json();
-  if (data.error) return alert(data.error);
-  const rows = data.map(r =>
-    `<tr><td>${r.store_location}</td><td>${r.item_name}</td><td>${r.date}</td><td>${r.predicted_waste_kg}</td></tr>`);
-  document.getElementById("wasteForecastResult").innerHTML = `
-    <table><tr><th>Store</th><th>Item</th><th>Date</th><th>Forecasted Waste (kg)</th></tr>
-    ${rows.join("")}</table>`;
-}
-
-let simDay = 1;
-const simEvents = [
-  { name: "🔥 Heatwave", impact: 1.8 },
-  { name: "🎉 Festival Demand", impact: 0.7 },
-  { name: "❄️ Cold Storage Breakdown", impact: 2.1 },
-  { name: "💡 Power Cut", impact: 1.5 },
-  { name: "🌧️ Heavy Rainfall", impact: 1.3 },
-  { name: "🌞 Normal Day", impact: 1.0 }
-];
-
-function simulateDay() {
-  if (simDay > 7) {
-    alert("✅ Simulation complete. Restart to try again.");
-    return;
-  }
-  const event = simEvents[Math.floor(Math.random() * simEvents.length)];
-  document.getElementById("simDay").innerText = simDay;
-  document.getElementById("simEvent").innerText = event.name;
-  const waste = Math.round(Math.random() * 30 * event.impact);
-  const donation = Math.round(Math.random() * 20);
-  const profit = Math.round(1000 - waste * 5 + donation * 2);
-  const karma = Math.round(donation * 2 - waste + profit / 100);
-  const mood = karma > 20 ? "😇" : karma < -10 ? "😞" : "🙂";
-  document.getElementById("simResult").innerHTML = `
-    <p>🗑️ Waste Generated: <strong>${waste} kg</strong></p>
-    <p>❤️ Donations Made: <strong>${donation} kg</strong></p>
-    <p>💰 Profit Earned: <strong>₹${profit}</strong></p>
-    <p>🧘 Karma Score: <strong>${karma}</strong></p>
-    <p>🌍 Planet Mood: <strong>${mood}</strong></p>`;
-  simDay++;
-}
-
-function restartSim() {
-  simDay = 1;
-  document.getElementById("simDay").innerText = simDay;
-  document.getElementById("simEvent").innerText = "🌞 Normal Day";
-  document.getElementById("simResult").innerHTML = `<p>Click "Next Day" to start simulation</p>`;
+  box.innerHTML = "<h4>⚠️ Alerts</h4><hr><p>No alerts right now.</p>";
 }
 </script>
+
 </body>
 </html>
