@@ -69,7 +69,6 @@ def upload_csv():
             "expiry_status", "daily_demand", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
-        # Alerts
         alerts_df = df[
             (df["days_to_expiry"] < 1) |
             ((df["stock"] > 50) & (df["daily_demand"] < 10)) |
@@ -138,7 +137,7 @@ def recommend_action():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# === WASTE FORECAST (Page 5) ===
+# === WASTE FORECAST ===
 @app.route("/forecast_waste", methods=["POST"])
 def forecast_waste():
     try:
@@ -179,7 +178,7 @@ def forecast_waste():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === AI LEADERBOARD (Page 4) ===
+# === AI LEADERBOARD ===
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
     pd.DataFrame(columns=["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "ai_score"]).to_csv(LEADERBOARD_FILE, index=False)
@@ -246,51 +245,32 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === 🎮 WASTEPLEX SIMULATOR (Page 6) ===
-@app.route('/simulate_wasteplex', methods=['POST'])
-def simulate_wasteplex():
+# === NEW: RETAIL SUSTAINABILITY SIMULATOR (Page 6) ===
+@app.route('/simulate_day', methods=['POST'])
+def simulate_day():
     try:
-        data = request.get_json()
-        day = data.get("day")
-        inputs = data.get("inputs", {})
-        event = data.get("event", {})
+        data = request.json
+        stock = int(data.get("stock", 0))
+        temperature = float(data.get("temperature", 25))
+        action = data.get("action", "redistribute")
 
-        if not inputs or not event:
-            return jsonify({"error": "Missing simulation input or event details"}), 400
+        waste = max(0, int(stock * (temperature - 25) * 0.02)) if temperature > 25 else 0
+        donation = int(stock * 0.1) if action == "redistribute" else 0
+        loss = waste * 15
 
-        milk = int(inputs.get("milk", 0))
-        bananas = int(inputs.get("bananas", 0))
-        bread = int(inputs.get("bread", 0))
-        veggies = int(inputs.get("veggies", 0))
-
-        total_qty = milk + bananas + bread + veggies
-
-        product_prices = {
-            "milk": 40, "bananas": 12, "bread": 35, "veggies": 20
-        }
-
-        revenue = (
-            milk * product_prices["milk"] +
-            bananas * product_prices["bananas"] +
-            bread * product_prices["bread"] +
-            veggies * product_prices["veggies"]
-        ) * 0.8  # 80% sold
-
-        spoilage_multiplier = float(event.get("spoiler", 1.0))
-        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)
-        donation = int(total_qty * 0.1)
-        profit = revenue - waste * 20 + donation * 5
-        karma = (donation * 2 - waste) + int(profit / 100)
-        mood = "😐"
-        if waste > 70: mood = "😠"
-        elif waste < 30 and donation > 10: mood = "😇"
+        sustainability_score = 100 - waste - loss / 10 + donation * 2
+        mood = "🌎 Excellent" if sustainability_score >= 90 else \
+               "⚠️ Moderate" if sustainability_score >= 70 else \
+               "🚨 Poor"
 
         return jsonify({
-            "day": day,
-            "waste_kg": waste,
-            "donation_kg": donation,
-            "profit": round(profit, 2),
-            "karma": karma,
+            "stock": stock,
+            "temperature": temperature,
+            "action": action,
+            "waste": waste,
+            "donation": donation,
+            "loss": loss,
+            "sustainability_score": round(sustainability_score, 2),
             "mood": mood,
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M")
         })
