@@ -45,17 +45,9 @@
     button {
       background-color: #0071ce; color: white; padding: 10px 20px;
       border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
+      margin-right: 10px;
     }
     button:hover { background-color: #005bbb; }
-    table {
-      width: 100%; border-collapse: collapse; margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd; padding: 12px; text-align: center;
-    }
-    th { background-color: #0071ce; color: white; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
-    .result { margin-top: 12px; font-weight: bold; }
     .page { display: none; }
     .active { display: block; }
     .welcome {
@@ -65,17 +57,24 @@
     .alert-item {
       border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
     }
+    .control-group {
+      margin-bottom: 20px;
+    }
+    .animate-pulse {
+      animation: pulse 0.5s ease-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); background-color: #fefefe; }
+      50% { transform: scale(1.05); background-color: #c2f0ff; }
+      100% { transform: scale(1); background-color: #fff; }
+    }
   </style>
 </head>
 <body>
 
+<!-- Sidebar & Navigation -->
 <div id="mySidebar" class="sidebar">
-  <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
-  <a href="javascript:void(0)" onclick="navigate('page3')">📦 Smart Recommendations</a>
-  <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
-  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
-  <a href="#" onclick="showPage('page6')">🕹️ Wasteplex Simulator</a>
+  <a href="javascript:void(0)" onclick="navigate('page6')">🕹️ Wasteplex Simulator</a>
 </div>
 
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
@@ -83,137 +82,65 @@
 <div id="alertBox" class="alert-box"></div>
 
 <div id="main">
+  <!-- Welcome Page -->
   <div id="welcome" class="welcome">
     <h1>👋 Welcome to Walmart Waste Predictor</h1>
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- 📈 Demand Forecast -->
-  <div id="page1" class="page container">
-    <h2>📈 Demand Forecast</h2>
-    <form id="forecastForm">
-      <label>Previous Sales</label><input name="previous_sales" type="number" required />
-      <label>Stock</label><input name="stock" type="number" required />
-      <label>Temperature (°C)</label><input name="temperature_C" type="number" required />
-      <button type="submit">Predict</button>
-    </form>
-    <div id="forecastResult" class="result"></div>
-  </div>
+  <!-- Page 6: Wasteplex Simulator -->
+  <div class="page container" id="page6">
+    <h2>🕹️ Wasteplex: Retail Chaos Simulator</h2>
+    <p>Day <span id="wpDayCount">1</span> of 7</p>
 
-  <!-- 🗑 Waste Risk -->
-  <div id="page2" class="page container">
-    <h2>🗑 Waste Risk Prediction</h2>
-    <form id="wasteForm">
-      <label>Shelf Life (days)</label><input name="shelf_life_days" type="number" required />
-      <label>Current Stock</label><input name="current_stock" type="number" required />
-      <label>Sold Last 7 Days</label><input name="sold_last_7_days" type="number" required />
-      <label>Forecasted Demand</label><input name="forecasted_demand" type="number" required />
-      <label>Temperature (°C)</label><input name="temperature_C" type="number" required />
-      <label>Humidity (%)</label><input name="humidity_percent" type="number" required />
-      <label>Category</label>
-      <select name="category" required>
-        <option>Dairy</option><option>Fruit</option><option>Meat</option><option>Vegetable</option>
-      </select>
-      <button type="submit">Predict</button>
-    </form>
-    <div id="wasteResult" class="result"></div>
-  </div>
+    <div class="control-group">
+      <label>Milk</label>
+      <input type="range" id="wpMilk" min="0" max="50" value="0">
+      <span id="wpMilkVal">0</span>
+    </div>
+    <div class="control-group">
+      <label>Bananas</label>
+      <input type="range" id="wpBanana" min="0" max="80" value="0">
+      <span id="wpBananaVal">0</span>
+    </div>
+    <div class="control-group">
+      <label>Bread</label>
+      <input type="range" id="wpBread" min="0" max="60" value="0">
+      <span id="wpBreadVal">0</span>
+    </div>
+    <div class="control-group">
+      <label>Veggies</label>
+      <input type="range" id="wpVeggie" min="0" max="100" value="0">
+      <span id="wpVeggieVal">0</span>
+    </div>
 
-  <!-- 📦 Smart Recommendations -->
-  <div id="page3" class="page container">
-    <h2>📦 Smart Bulk Recommendations</h2>
-    <label>Upload Inventory CSV</label>
-    <input id="csvInput" type="file" accept=".csv" />
-    <button onclick="uploadCSV()">Upload & Analyze</button>
-    <table id="recommendationTable">
-      <thead><tr>
-        <th>Product</th><th>Store</th><th>Category</th><th>Stock</th><th>Freshness</th>
-        <th>Expiry</th><th>Demand</th><th>Risk</th><th>Recommendation</th>
-      </tr></thead><tbody></tbody>
-    </table>
-  </div>
+    <button onclick="simulateWasteplex()">Simulate Day</button>
+    <button onclick="resetWasteplex()">Restart Game 🔄</button>
 
-  <!-- 🏁 AI Leaderboard -->
-  <div id="page4" class="page container">
-    <h2>🏁 AI Leaderboard</h2>
-    <form id="aiUploadForm">
-      <label>Upload Waste Report CSV</label>
-      <input type="file" name="file" required />
-      <button type="submit">Upload & Score</button>
-    </form>
-    <div id="aiUploadResult" class="result"></div>
-
-    <h3>📅 View Daily Leaderboard</h3>
-    <button onclick="loadAIDaily()">Today</button>
-    <input type="date" id="leaderboardDate" />
-    <button onclick="loadByDate()">View</button>
-    <table id="aiDailyLeaderboard"><thead>
-      <tr><th>Store</th><th>Donated</th><th>Reduced</th><th>Wasted</th><th>AI Score</th><th>Badge</th></tr>
-    </thead><tbody></tbody></table>
-
-    <h3>📆 Monthly Leaderboard</h3>
-    <button onclick="loadAIMonthly()">Load</button>
-    <table id="aiMonthlyLeaderboard"><thead>
-      <tr><th>Store</th><th>Total Donated</th><th>Total Reduced</th><th>Total Wasted</th><th>AI Score</th><th>🏆</th></tr>
-    </thead><tbody></tbody></table>
+    <div id="wpEventResult" style="margin-top: 1rem;"></div>
   </div>
 </div>
 
-  <div id="page5" class="page container">
-  
-  <h2>📉 Waste Forecast</h2>
-<input type="file" id="wasteCSV" accept=".csv">
-<button onclick="uploadWasteCSV()">Upload & Forecast</button>
-<div id="wasteForecastResult" class="result"></div>
-<img id="forecastPlot" src="static/forecast_plot.png" alt="Forecast Plot" style="display:none; max-width:100%; margin-top:20px;">
-
- <table id="forecastResultTable" style="display:none;">
-    <thead>
-      <tr>
-        <th>Store</th>
-        <th>Item</th>
-        <th>Date</th>
-        <th>Predicted Waste (kg)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-
-  <div class="page" id="page6">
-  <h2>🕹️ Wasteplex: Retail Chaos Simulator</h2>
-  <p>Day <span id="wpDayCount">1</span> of 7</p>
-
-  <div class="control-group">
-    <label>Milk</label>
-    <input type="range" id="wpMilk" min="0" max="50">
-    <span id="wpMilkVal">0</span>
-  </div>
-  <div class="control-group">
-    <label>Bananas</label>
-    <input type="range" id="wpBanana" min="0" max="80">
-    <span id="wpBananaVal">0</span>
-  </div>
-  <div class="control-group">
-    <label>Bread</label>
-    <input type="range" id="wpBread" min="0" max="60">
-    <span id="wpBreadVal">0</span>
-  </div>
-  <div class="control-group">
-    <label>Veggies</label>
-    <input type="range" id="wpVeggie" min="0" max="100">
-    <span id="wpVeggieVal">0</span>
-  </div>
-
-  <button onclick="simulateWasteplex()">Simulate Day</button>
-
-  <div id="wpEventResult" style="margin-top: 1rem;"></div>
-</div>
-
+<!-- JavaScript -->
 <script>
 const BASE = "https://walmart-waste-predictor.onrender.com";
 let latestAlerts = [];
+let wpDay = 1;
+
+const wpEvents = [
+  { name: "🔥 Heatwave", spoiler: 1.8 },
+  { name: "🎉 Festival Demand", spoiler: 0.8 },
+  { name: "❄️ Cold storage failure", spoiler: 2.2 },
+  { name: "🧊 Ice Storm", spoiler: 1.6 },
+  { name: "🪫 Power outage", spoiler: 2.0 },
+  { name: "🌞 Normal day", spoiler: 1.0 }
+];
+
+["Milk", "Banana", "Bread", "Veggie"].forEach(item => {
+  document.getElementById("wp" + item).oninput = e => {
+    document.getElementById("wp" + item + "Val").innerText = e.target.value;
+  };
+});
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
@@ -226,26 +153,6 @@ function navigate(id) {
   document.getElementById("mySidebar").style.left = "-250px";
   document.getElementById("alertBox").style.display = "none";
 }
-
-async function uploadCSV() {
-  const file = document.getElementById("csvInput").files[0];
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${BASE}/upload_csv`, { method: "POST", body: formData });
-  const json = await res.json();
-  const table = document.getElementById("recommendationTable").querySelector("tbody");
-  table.innerHTML = "";
-  (json.recommendations || []).forEach(row => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${row.name}</td><td>${row.store_location}</td><td>${row.category}</td><td>${row.stock}</td>
-      <td>${row.freshness_score}</td><td>${row.expiry_status}</td><td>${row.daily_demand}</td>
-      <td>${row.expiry_risk ? "High" : "Low"}</td><td>${row.recommendation}</td>`;
-    table.appendChild(tr);
-  });
-  latestAlerts = json.alerts || [];
-  alert("Upload successful! Alerts updated 🔔");
-}
-
 function toggleAlerts() {
   const box = document.getElementById("alertBox");
   box.style.display = box.style.display === "block" ? "none" : "block";
@@ -265,135 +172,13 @@ function toggleAlerts() {
   }
 }
 
-// 🧠 AI Leaderboard Scripts
-document.getElementById("aiUploadForm")?.addEventListener("submit", async e => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const res = await fetch(`${BASE}/upload_waste_ai`, {
-    method: "POST", body: formData
-  });
-  const json = await res.json();
-  document.getElementById("aiUploadResult").innerText = json.message || json.error;
-});
-
-async function loadAIDaily() {
-  const res = await fetch(`${BASE}/ai_daily_leaderboard`);
-  const data = await res.json();
-  const table = document.getElementById("aiDailyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
-}
-
-async function loadByDate() {
-  const d = document.getElementById("leaderboardDate").value;
-  if (!d) return alert("Pick a date");
-  const [y, m, day] = d.split("-");
-  const format = `${day}-${m}-${y}`;
-  const res = await fetch(`${BASE}/ai_leaderboard_by_date?date=${format}`);
-  const data = await res.json();
-  const table = document.getElementById("aiDailyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
-}
-
-async function loadAIMonthly() {
-  const res = await fetch(`${BASE}/ai_monthly_leaderboard`);
-  const data = await res.json();
-  const table = document.getElementById("aiMonthlyLeaderboard").querySelector("tbody");
-  table.innerHTML = "";
-  data.forEach(row => {
-    table.innerHTML += `<tr><td>${row.store_location}</td><td>${row.waste_donated_kg}</td>
-      <td>${row.waste_reduced_kg}</td><td>${row.waste_generated_kg}</td>
-      <td>${row.ai_score}</td><td>${row.badge}</td></tr>`;
-  });
-}
-
-// 📈 Upload Waste CSV and Forecast
-
-async function uploadWasteCSV() {
-  const file = document.getElementById("wasteCSV").files[0];
-  if (!file) {
-    alert("Please upload a CSV file.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const res = await fetch(`${BASE}/forecast_waste`, {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      document.getElementById("wasteForecastResult").innerText = `❌ ${data.error}`;
-      document.getElementById("forecastResultTable").style.display = "none";
-      return;
-    }
-
-    // 🧾 Update table
-    const table = document.getElementById("forecastResultTable").querySelector("tbody");
-    table.innerHTML = "";
-    data.forEach(row => {
-      table.innerHTML += `<tr>
-        <td>${row.store_location}</td>
-        <td>${row.item_name}</td>
-        <td>${row.date}</td>
-        <td>${row.predicted_waste_kg.toFixed(2)}</td>
-      </tr>`;
-    });
-
-    // ✅ Show results
-    document.getElementById("wasteForecastResult").innerText = "✅ Forecast complete!";
-    document.getElementById("forecastResultTable").style.display = "table";
-    document.getElementById("forecastPlot").style.display = "none"; // optional
-
-  } catch (error) {
-    document.getElementById("wasteForecastResult").innerText = `❌ Error: ${error.message}`;
-  }
-}
-
-
-
-  <script>
-let wpDay = 1;
-const wpEvents = [
-  { name: "🔥 Heatwave", spoiler: 1.8 },
-  { name: "🎉 Festival Demand", spoiler: 0.8 },
-  { name: "❄️ Cold storage failure", spoiler: 2.2 },
-  { name: "🧊 Ice Storm", spoiler: 1.6 },
-  { name: "🪫 Power outage", spoiler: 2.0 },
-  { name: "🌞 Normal day", spoiler: 1.0 }
-];
-
-document.getElementById("wpMilk").oninput = e =>
-  document.getElementById("wpMilkVal").innerText = e.target.value;
-document.getElementById("wpBanana").oninput = e =>
-  document.getElementById("wpBananaVal").innerText = e.target.value;
-document.getElementById("wpBread").oninput = e =>
-  document.getElementById("wpBreadVal").innerText = e.target.value;
-document.getElementById("wpVeggie").oninput = e =>
-  document.getElementById("wpVeggieVal").innerText = e.target.value;
-
 function simulateWasteplex() {
   if (wpDay > 7) {
-    alert("✅ Game completed. Reload to restart.");
+    alert("✅ Game completed. Please restart.");
     return;
   }
 
   const event = wpEvents[Math.floor(Math.random() * wpEvents.length)];
-
   const data = {
     day: wpDay,
     inputs: {
@@ -404,6 +189,9 @@ function simulateWasteplex() {
     },
     event: event
   };
+
+  playSound();
+  animateSimulator();
 
   fetch(`${BASE}/simulate_wasteplex`, {
     method: "POST",
@@ -426,11 +214,34 @@ function simulateWasteplex() {
       document.getElementById("wpEventResult").innerText = "Error: " + err;
     });
 }
-</script>
 
+function resetWasteplex() {
+  wpDay = 1;
+  document.getElementById("wpDayCount").innerText = wpDay;
+  ["Milk", "Banana", "Bread", "Veggie"].forEach(item => {
+    document.getElementById("wp" + item).value = 0;
+    document.getElementById("wp" + item + "Val").innerText = "0";
+  });
+  document.getElementById("wpEventResult").innerHTML = "";
+}
 
+function playSound() {
+  const ctx = new AudioContext();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(600, ctx.currentTime);
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.2);
+}
 
-
+function animateSimulator() {
+  const simPage = document.getElementById("page6");
+  simPage.classList.add("animate-pulse");
+  setTimeout(() => simPage.classList.remove("animate-pulse"), 500);
+}
 </script>
 </body>
 </html>
