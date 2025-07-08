@@ -1,3 +1,4 @@
+```python
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 import joblib
@@ -97,7 +98,7 @@ def upload_csv():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
-# === DEMAND, RISK, RECOMMEND ===
+# === RISK PREDICTOR ===
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -108,6 +109,7 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+# === DEMAND FORECAST ===
 @app.route('/forecast_demand', methods=['POST'])
 def forecast_demand():
     try:
@@ -115,25 +117,6 @@ def forecast_demand():
         features = [json_['previous_sales'], json_['stock'], json_['temperature_C']]
         prediction = demand_model.predict([features])[0]
         return jsonify({'forecasted_demand': round(prediction, 2)})
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-@app.route('/recommend_action', methods=['POST'])
-def recommend_action():
-    try:
-        data = request.json
-        expiry_features = [data[col] for col in model_columns]
-        expiry_risk = model.predict([expiry_features])[0]
-        demand_features = [data['previous_sales'], data['stock'], data['temperature_C']]
-        demand = demand_model.predict([demand_features])[0]
-        action = "Donate" if expiry_risk == 1 and demand < 20 else \
-                 "Transfer or Apply Discount" if expiry_risk == 1 else \
-                 "Keep in Stock"
-        return jsonify({
-            'expiry_risk': int(expiry_risk),
-            'forecasted_demand': round(demand, 2),
-            'recommendation': action
-        })
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -178,10 +161,13 @@ def forecast_waste():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === AI LEADERBOARD ===
+# === AI LEADERBOARD SYSTEM ===
 LEADERBOARD_FILE = "data/ai_leaderboard.csv"
 if not os.path.exists(LEADERBOARD_FILE):
-    pd.DataFrame(columns=["store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "ai_score"]).to_csv(LEADERBOARD_FILE, index=False)
+    os.makedirs("data", exist_ok=True)
+    pd.DataFrame(columns=[
+        "store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "ai_score"
+    ]).to_csv(LEADERBOARD_FILE, index=False)
 
 @app.route("/upload_waste_ai", methods=["POST"])
 def upload_waste_ai():
@@ -204,8 +190,8 @@ def ai_daily_leaderboard():
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
         today = datetime.today().date()
-        daily = df[df["date"] == today].drop_duplicates("store_location")
-        daily = daily.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        daily = df[df["date"] == today]
+        daily = daily.drop_duplicates("store_location").sort_values("ai_score", ascending=False).reset_index(drop=True)
         daily["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily) - 3)
         return jsonify(daily.to_dict(orient="records"))
     except Exception as e:
@@ -238,19 +224,18 @@ def ai_leaderboard_by_date():
         date_obj = datetime.strptime(date_str, "%d-%m-%Y").date()
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
-        result = df[df["date"] == date_obj].drop_duplicates("store_location")
-        result = result.sort_values("ai_score", ascending=False).reset_index(drop=True)
+        result = df[df["date"] == date_obj].drop_duplicates("store_location").sort_values("ai_score", ascending=False).reset_index(drop=True)
         result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
         return jsonify(result.to_dict(orient="records"))
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === 🎮 RETAIL SUSTAINABILITY SIMULATOR (Page 6) ===
+# === SIMULATION BACKEND (OPTIONAL) ===
 @app.route('/simulate_day', methods=['POST'])
 def simulate_day():
     try:
         data = request.get_json()
-        day = data.get("day")
+        day = data.get("day", 1)
         inputs = data.get("inputs", {})
         event = data.get("event", {})
 
@@ -273,7 +258,7 @@ def simulate_day():
             bananas * product_prices["bananas"] +
             bread * product_prices["bread"] +
             veggies * product_prices["veggies"]
-        ) * 0.8  # 80% sold
+        ) * 0.8
 
         spoilage_multiplier = float(event.get("spoiler", 1.0))
         waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)
@@ -300,3 +285,4 @@ if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+```
