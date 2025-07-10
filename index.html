@@ -27,8 +27,8 @@
     .bell-icon, .chart-icon {
       position: fixed; top: 14px; font-size: 24px; cursor: pointer; z-index: 1100;
     }
-    .bell-icon { right: 60px; }
-    .chart-icon { right: 20px; }
+    .bell-icon { right: 60px; display: block; }
+    .chart-icon { right: 20px; display: none; }
 
     .alert-box, .chart-popup {
       position: fixed; background: white; border: 1px solid #ccc;
@@ -102,50 +102,55 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- PAGE CONTENTS -->
-  <div id="page1" class="page container"> <!-- Demand Forecast Page -->
-    <h2>📈 Demand Forecast</h2>
-    <!-- Form here -->
-  </div>
-
-  <div id="page2" class="page container"> <!-- Waste Risk -->
-    <h2>🗑 Waste Risk Prediction</h2>
-    <!-- Form here -->
-  </div>
-
-  <div id="page3" class="page container"> <!-- Smart Recommendations -->
-    <h2>📦 Smart Bulk Recommendations</h2>
-    <!-- Upload & Table here -->
-  </div>
-
-  <div id="page4" class="page container"> <!-- AI Leaderboard -->
-    <h2>🏁 AI Leaderboard</h2>
-    <!-- Upload and Leaderboard Tables -->
-  </div>
-
-  <div id="page5" class="page container"> <!-- Waste Forecast -->
-    <h2>📉 Waste Forecast</h2>
-    <!-- Forecast CSV Upload -->
-  </div>
+  <!-- PAGE 1 to 5 placeholders -->
+  <div id="page1" class="page container"><h2>📈 Demand Forecast</h2></div>
+  <div id="page2" class="page container"><h2>🗑 Waste Risk Prediction</h2></div>
+  <div id="page3" class="page container"><h2>📦 Smart Recommendations</h2></div>
+  <div id="page4" class="page container"><h2>🏁 AI Leaderboard</h2></div>
+  <div id="page5" class="page container"><h2>📉 Waste Forecast</h2></div>
 </div>
 
 <script>
 const BASE = "https://walmart-waste-predictor.onrender.com";
 let chartInstance = null;
+let latestAlerts = [];
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
+
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   document.getElementById("welcome").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
   document.getElementById("alertBox").style.display = "none";
+
+  // Show 📊 chart only for Page 3 and 5
+  document.querySelector(".chart-icon").style.display = (id === 'page3' || id === 'page5') ? "block" : "none";
 }
 
-// 📊 Chart Hover Logic
+function toggleAlerts() {
+  const box = document.getElementById("alertBox");
+  box.style.display = box.style.display === "block" ? "none" : "block";
+  box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
+  if (!latestAlerts.length) {
+    box.innerHTML += "<p>No critical alerts!</p>";
+  } else {
+    latestAlerts.forEach(alert => {
+      box.innerHTML += `
+        <div class="alert-item">
+          🔎 <b>${alert.name}</b> (${alert.store_location})<br>
+          📦 Stock: ${alert.stock}, 📈 Demand: ${alert.daily_demand}<br>
+          🧾 Expiry: ${alert.expiry_date}<br>
+          🧠 Alert: <b>${alert.alert_reason}</b>
+        </div>`;
+    });
+  }
+}
+
+// Chart Hover logic
 function showChart() {
   document.getElementById("chartPopup").style.display = "block";
   loadChartData();
@@ -154,30 +159,32 @@ function hideChart() {
   document.getElementById("chartPopup").style.display = "none";
 }
 async function loadChartData() {
-  const res = await fetch(`${BASE}/waste_chart_data`);
-  const json = await res.json();
-  if (!json || !json.labels) return;
-  const ctx = document.getElementById("wasteChart").getContext("2d");
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: json.labels,
-      datasets: [{
-        label: "Total Waste Generated (kg)",
-        data: json.data,
-        backgroundColor: "rgba(0, 112, 192, 0.2)",
-        borderColor: "#0070c0",
-        borderWidth: 2,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+  try {
+    const res = await fetch(`${BASE}/combined_chart_data`);
+    const json = await res.json();
+    const ctx = document.getElementById("wasteChart").getContext("2d");
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: json.labels,
+        datasets: [{
+          label: json.label,
+          data: json.data,
+          backgroundColor: "rgba(0, 112, 192, 0.5)",
+          borderColor: "#0070c0",
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  } catch (e) {
+    console.error("Chart error:", e);
+  }
 }
 </script>
 </body>
