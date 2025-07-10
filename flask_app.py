@@ -21,8 +21,11 @@ def home():
     return "Walmart Waste Predictor API is running!"
 
 # === SMART BULK RECOMMENDATIONS ===
+last_recommendation_df = pd.DataFrame()
+
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
+    global last_recommendation_df
     try:
         file = request.files['file']
         df = pd.read_csv(file)
@@ -69,6 +72,9 @@ def upload_csv():
             "expiry_status", "daily_demand", "expiry_risk", "recommendation"
         ]].to_dict(orient="records")
 
+        # Save last dataframe for chart use
+        last_recommendation_df = df.copy()
+
         alerts_df = df[
             (df["days_to_expiry"] < 1) |
             ((df["stock"] > 50) & (df["daily_demand"] < 10)) |
@@ -96,6 +102,21 @@ def upload_csv():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+@app.route('/chart_smart_bulk', methods=['GET'])
+def chart_smart_bulk():
+    try:
+        global last_recommendation_df
+        if last_recommendation_df.empty:
+            return jsonify({"error": "No smart bulk data uploaded yet."}), 400
+
+        grouped = last_recommendation_df.groupby("category")["stock"].sum().reset_index()
+        return jsonify({
+            "labels": grouped["category"].tolist(),
+            "data": grouped["stock"].tolist()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 # === RISK PREDICTOR ===
 @app.route('/predict', methods=['POST'])
@@ -229,14 +250,13 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === CHARTS ENDPOINT for Chart.js ===
+# === CHART DATA for AI Leaderboard ===
 @app.route('/waste_chart_data', methods=['GET'])
 def waste_chart_data():
     try:
         df = pd.read_csv(LEADERBOARD_FILE)
         df["date"] = pd.to_datetime(df["date"], errors='coerce')
         df = df.dropna(subset=["date"])
-
         chart_data = df.groupby("date")["waste_generated_kg"].sum().reset_index()
         chart_data["date"] = chart_data["date"].dt.strftime("%d-%m-%Y")
         return jsonify({
