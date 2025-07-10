@@ -1,184 +1,253 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Walmart Waste Predictor</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; overflow-x: hidden; }
-    .sidebar { height: 100%; width: 250px; position: fixed; top: 0; left: -250px; background-color: #003087; overflow-x: hidden; transition: 0.3s; padding-top: 60px; z-index: 1000; }
-    .sidebar a { padding: 16px 24px; text-decoration: none; font-size: 18px; color: #fff; display: block; }
-    .sidebar a:hover { background-color: #0050c2; }
-    .openbtn { font-size: 24px; cursor: pointer; background-color: #003087; color: white; padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100; }
-    .bell-icon { position: fixed; top: 14px; right: 20px; font-size: 24px; cursor: pointer; z-index: 1100; }
-    .alert-box { position: fixed; top: 50px; right: 20px; width: 320px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px; display: none; z-index: 1200; }
-    #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
-    .container { background-color: white; border-radius: 10px; padding: 30px; margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #003087; }
-    button { background-color: #0071ce; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 10px 8px 0; }
-    button:hover { background-color: #005bbb; }
-    .page { display: none; }
-    .active { display: block !important; }
-    .welcome { text-align: center; margin-top: 100px; font-size: 26px; color: #003087; padding: 0 20px; }
-    .sim-box { background: #eaf7ec; border-radius: 8px; padding: 20px; margin-top: 20px; animation: fadeIn 1s ease-in-out; }
-    .sim-result p { font-size: 16px; margin: 8px 0; }
-    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
-    .upgrade-card { border: 2px dashed #6b8e23; border-radius: 10px; padding: 15px; margin-top: 15px; background: #fdfdfd; animation: pulse 2s infinite; }
-    @keyframes pulse {
-      0% {box-shadow: 0 0 0 0 rgba(107, 142, 35, 0.5);}
-      70% {box-shadow: 0 0 0 10px rgba(107, 142, 35, 0);}
-      100% {box-shadow: 0 0 0 0 rgba(107, 142, 35, 0);}
-    }
-    .store-scoreboard p { margin: 6px 0; font-size: 15px; }
-    .game-header { font-size: 20px; font-weight: bold; margin-bottom: 10px; text-align: center; }
-  </style>
-</head>
-<body>
+from flask_cors import CORS
+from flask import Flask, request, jsonify
+import joblib
+import numpy as np
+import os
+import pandas as pd
+from datetime import datetime
+from prophet import Prophet
 
-<!-- Sidebar -->
-<div id="mySidebar" class="sidebar">
-  <a href="javascript:void(0)" onclick="navigate('page1')">📦 Smart Bulk Recommendations</a>
-  <a href="javascript:void(0)" onclick="navigate('page2')">⚠️ Waste Risk Predictor</a>
-  <a href="javascript:void(0)" onclick="navigate('page3')">📊 Demand Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page4')">🏆 AI Leaderboard</a>
-  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page6')">🎮 Simulation Game</a>
-</div>
+app = Flask(__name__)
+CORS(app)
 
-<!-- Top Buttons -->
-<button class="openbtn" onclick="toggleSidebar()">☰</button>
-<div class="bell-icon" onclick="toggleAlerts()">🔔</div>
-<div id="alertBox" class="alert-box"></div>
+# Load Models
+model = joblib.load("waste_predictor_model.pkl")
+model_columns = joblib.load("model_columns.pkl")
+demand_model = joblib.load("demand_model.pkl")
+ai_model = joblib.load("ai_score_model.pkl")
 
-<!-- Main Content -->
-<div id="main">
-  <div id="welcome" class="welcome">
-    <h1>👋 Welcome to Walmart Waste Predictor</h1>
-    <p>Click ☰ to explore our AI-powered dashboard.</p>
-  </div>
+@app.route('/')
+def home():
+    return "Walmart Waste Predictor API is running!"
 
-  <!-- Pages -->
-  <div class="page container" id="page1"><h2>Page 1</h2></div>
-  <div class="page container" id="page2"><h2>Page 2</h2></div>
-  <div class="page container" id="page3"><h2>Page 3</h2></div>
-  <div class="page container" id="page4"><h2>Page 4</h2></div>
-  <div class="page container" id="page5"><h2>Page 5</h2></div>
+# === SMART BULK RECOMMENDATIONS ===
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
 
-  <!-- === PAGE 6: RETAIL VIDEO GAME SIMULATION === -->
-  <div class="page container" id="page6">
-    <h2>🎮 Retail Rush: Build a Sustainable Empire</h2>
-    <div class="sim-box">
-      <div class="game-header">🛒 Day <span id="simDay">1</span> / 7 - <span id="eventLabel">🌞 Normal Day</span></div>
-      <div class="store-scoreboard">
-        <p>💰 Profit: ₹<span id="simProfit">0</span></p>
-        <p>🧘 Karma: <span id="simKarma">0</span></p>
-        <p>🗑️ Waste: <span id="simWaste">0</span> kg</p>
-        <p>❤️ Donations: <span id="simDonate">0</span> kg</p>
-        <p>🌍 Planet Mood: <span id="simMood">🙂</span></p>
-      </div>
+        required_columns = {"product_id", "name", "category", "stock", "expiry_date", "store_location", "freshness_score"}
+        if not required_columns.issubset(df.columns):
+            return jsonify({"success": False, "error": "Missing required columns."})
 
-      <div class="upgrade-card">
-        <strong>💡 Choose Your Upgrade:</strong><br><br>
-        <button onclick="applyUpgrade('solar')">☀️ Solar Panels (+Karma)</button>
-        <button onclick="applyUpgrade('cold')">❄️ Smart Cold Storage (-Waste)</button>
-        <button onclick="applyUpgrade('donate')">🤝 NGO Partnership (+Donations)</button>
-      </div>
+        today = datetime.today().date()
+        df["expiry_date"] = pd.to_datetime(df["expiry_date"], errors='coerce')
+        df["days_to_expiry"] = df["expiry_date"].apply(lambda x: (x.date() - today).days if pd.notna(x) else pd.NA)
 
-      <br><button onclick="simulateDay()">▶️ Next Day</button>
-      <button onclick="restartSim()">🔄 Restart Game</button>
-    </div>
-  </div>
-</div>
+        def check_expiry_risk(row):
+            if pd.isna(row["days_to_expiry"]) or pd.isna(row["freshness_score"]):
+                return 0
+            return 1 if row["days_to_expiry"] <= 2 and row["freshness_score"] < 0.7 else 0
 
-<!-- JS -->
-<script>
-let simDay = 1, simProfit = 0, simWaste = 0, simDonate = 0, simKarma = 0;
-let upgrades = { solar: false, cold: false, donate: false };
+        df["expiry_risk"] = df.apply(check_expiry_risk, axis=1)
 
-function simulateDay() {
-  if (simDay > 7) return alert("🏁 Simulation complete. Restart to try again.");
+        def label_expiry_status(days):
+            if pd.isna(days):
+                return "Invalid Date"
+            elif days < 0:
+                return "Already Expired"
+            else:
+                return f"{days} day(s) left"
 
-  const event = getRandomEvent();
-  document.getElementById("eventLabel").innerText = event.name;
+        df["expiry_status"] = df["days_to_expiry"].apply(label_expiry_status)
 
-  const inputs = {
-    milk: Math.floor(Math.random() * 10 + 5),
-    bananas: Math.floor(Math.random() * 20 + 5),
-    bread: Math.floor(Math.random() * 15 + 5),
-    veggies: Math.floor(Math.random() * 25 + 5)
-  };
+        if 'previous_sales' not in df.columns:
+            df['previous_sales'] = df['stock'].apply(lambda x: max(1, int(x * 0.7)))
+        if 'temperature_C' not in df.columns:
+            df['temperature_C'] = 25
 
-  fetch("http://localhost:5000/simulate_day", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ day: simDay, inputs: inputs, event: { spoiler: event.impact } })
-  })
-  .then(res => res.json())
-  .then(data => {
-    simProfit += data.profit;
-    simWaste += data.waste_kg;
-    simDonate += data.donation_kg;
-    simKarma += data.karma;
+        df["daily_demand"] = df.apply(
+            lambda row: round(demand_model.predict([[row["previous_sales"], row["stock"], row["temperature_C"]]])[0], 2),
+            axis=1
+        )
 
-    document.getElementById("simDay").innerText = simDay;
-    document.getElementById("simProfit").innerText = simProfit;
-    document.getElementById("simWaste").innerText = simWaste;
-    document.getElementById("simDonate").innerText = simDonate;
-    document.getElementById("simKarma").innerText = simKarma;
-    document.getElementById("simMood").innerText = data.mood;
+        df["recommendation"] = df["expiry_risk"].apply(lambda r: "Donate" if r else "Keep in Stock")
 
-    simDay++;
-  })
-  .catch(err => alert("Simulation failed. Please ensure backend is running.\n" + err));
-}
+        recommendations = df[[
+            "product_id", "name", "store_location", "category", "stock", "freshness_score",
+            "expiry_status", "daily_demand", "expiry_risk", "recommendation"
+        ]].to_dict(orient="records")
 
-function getRandomEvent() {
-  const events = [
-    { name: "🌞 Normal Day", impact: 1.0 },
-    { name: "🔥 Heatwave", impact: 1.6 },
-    { name: "🌧️ Rainy Day", impact: 1.2 },
-    { name: "⚡ Power Cut", impact: 1.4 },
-    { name: "🎉 Festival Rush", impact: 0.7 }
-  ];
-  return events[Math.floor(Math.random() * events.length)];
-}
+        alerts_df = df[
+            (df["days_to_expiry"] < 1) |
+            ((df["stock"] > 50) & (df["daily_demand"] < 10)) |
+            ((df["daily_demand"] > 80) & (df["stock"] < 20) & (df["days_to_expiry"] > 1))
+        ].copy()
 
-function applyUpgrade(type) {
-  if (upgrades[type]) return alert("Already activated!");
-  upgrades[type] = true;
-  alert(`✅ Upgrade activated: ${type}`);
-}
+        def detect_reason(row):
+            if row["days_to_expiry"] < 1:
+                return "❗ Expiring Today"
+            elif row["stock"] > 50 and row["daily_demand"] < 10:
+                return "📉 Overstocked, Low Demand"
+            elif row["daily_demand"] > 80 and row["stock"] < 20:
+                return "⚡ Demand Surge, Low Stock"
+            return "Unknown"
 
-function restartSim() {
-  simDay = 1; simProfit = 0; simWaste = 0; simDonate = 0; simKarma = 0;
-  upgrades = { solar: false, cold: false, donate: false };
-  document.getElementById("simDay").innerText = simDay;
-  document.getElementById("simProfit").innerText = 0;
-  document.getElementById("simWaste").innerText = 0;
-  document.getElementById("simDonate").innerText = 0;
-  document.getElementById("simKarma").innerText = 0;
-  document.getElementById("simMood").innerText = "🙂";
-  document.getElementById("eventLabel").innerText = "🌞 Normal Day";
-}
+        alerts_df["alert_reason"] = alerts_df.apply(detect_reason, axis=1)
+        alerts_df["expiry_date"] = alerts_df["expiry_date"].dt.strftime("%d-%m-%Y")
 
-function toggleSidebar() {
-  const bar = document.getElementById("mySidebar");
-  bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
-}
-function navigate(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.getElementById("welcome").style.display = "none";
-  document.getElementById("alertBox").style.display = "none";
-  document.getElementById("mySidebar").style.left = "-250px";
-}
-function toggleAlerts() {
-  const box = document.getElementById("alertBox");
-  box.style.display = box.style.display === "block" ? "none" : "block";
-  box.innerHTML = "<h4>⚠️ Alerts</h4><hr><p>No alerts right now.</p>";
-}
-</script>
+        alerts = alerts_df[[
+            "product_id", "name", "store_location", "category", "stock",
+            "expiry_date", "daily_demand", "days_to_expiry", "alert_reason"
+        ]].to_dict(orient="records")
 
-</body>
-</html>
+        return jsonify({"success": True, "recommendations": recommendations, "alerts": alerts})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+# === RISK PREDICTOR ===
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        json_ = request.json
+        query = [json_[col] for col in model_columns]
+        prediction = model.predict([query])[0]
+        return jsonify({'prediction': "High Risk" if prediction else "Low Risk"})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+# === DEMAND FORECAST ===
+@app.route('/forecast_demand', methods=['POST'])
+def forecast_demand():
+    try:
+        json_ = request.json
+        features = [json_['previous_sales'], json_['stock'], json_['temperature_C']]
+        prediction = demand_model.predict([features])[0]
+        return jsonify({'forecasted_demand': round(prediction, 2)})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+# === WASTE FORECAST ===
+@app.route("/forecast_waste", methods=["POST"])
+def forecast_waste():
+    try:
+        file = request.files.get('file')
+        if not file:
+            return jsonify({"error": "No file uploaded"}), 400
+
+        df = pd.read_csv(file)
+        expected_columns = {"store_location", "item_name", "date", "waste_kg"}
+        if not expected_columns.issubset(df.columns):
+            return jsonify({"error": f"Missing required columns: {expected_columns}"}), 400
+
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors="coerce")
+        df = df.dropna(subset=["date", "waste_kg"])
+        df["waste_kg"] = pd.to_numeric(df["waste_kg"], errors="coerce")
+
+        results = []
+        grouped = df.groupby(["store_location", "item_name"])
+        for (store, item), group_df in grouped:
+            group_df = group_df.rename(columns={"date": "ds", "waste_kg": "y"}).sort_values("ds")
+            if len(group_df) < 2:
+                continue
+            model = Prophet()
+            model.fit(group_df[["ds", "y"]])
+            forecast = model.predict(model.make_future_dataframe(periods=7))
+            forecast_result = forecast[["ds", "yhat"]].tail(7)
+            forecast_result["ds"] = forecast_result["ds"].dt.strftime("%d-%m-%Y")
+            for _, row in forecast_result.iterrows():
+                results.append({
+                    "store_location": store,
+                    "item_name": item,
+                    "date": row["ds"],
+                    "predicted_waste_kg": round(row["yhat"], 2)
+                })
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# === AI LEADERBOARD SYSTEM ===
+LEADERBOARD_FILE = "data/ai_leaderboard.csv"
+if not os.path.exists(LEADERBOARD_FILE):
+    os.makedirs("data", exist_ok=True)
+    pd.DataFrame(columns=[
+        "store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date", "ai_score"
+    ]).to_csv(LEADERBOARD_FILE, index=False)
+
+@app.route("/upload_waste_ai", methods=["POST"])
+def upload_waste_ai():
+    try:
+        file = request.files['file']
+        df = pd.read_csv(file)
+        required = {"store_location", "waste_donated_kg", "waste_reduced_kg", "waste_generated_kg", "date"}
+        if not required.issubset(df.columns):
+            return jsonify({"success": False, "error": "Missing required columns."})
+        df["date"] = pd.to_datetime(df["date"], format="%d-%m-%Y", errors='coerce').dt.date
+        df["ai_score"] = ai_model.predict(df[["waste_donated_kg", "waste_reduced_kg", "waste_generated_kg"]]).round(2)
+        df.to_csv(LEADERBOARD_FILE, mode="a", index=False, header=False)
+        return jsonify({"success": True, "message": "Report uploaded with AI scores!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+@app.route("/ai_daily_leaderboard", methods=["GET"])
+def ai_daily_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+        today = datetime.today().date()
+        daily = df[df["date"] == today]
+        daily = daily.drop_duplicates("store_location").sort_values("ai_score", ascending=False).reset_index(drop=True)
+        daily["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(daily) - 3)
+        return jsonify(daily.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/ai_monthly_leaderboard", methods=["GET"])
+def ai_monthly_leaderboard():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+        today = datetime.today()
+        df = df[df["date"].apply(lambda d: d.month == today.month and d.year == today.year)]
+        monthly = df.groupby("store_location").agg({
+            "waste_donated_kg": "sum",
+            "waste_reduced_kg": "sum",
+            "waste_generated_kg": "sum",
+            "ai_score": "mean"
+        }).reset_index().sort_values("ai_score", ascending=False)
+        monthly["badge"] = ["🏆"] + [""] * (len(monthly) - 1)
+        return jsonify(monthly.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/ai_leaderboard_by_date", methods=["GET"])
+def ai_leaderboard_by_date():
+    try:
+        date_str = request.args.get("date")
+        if not date_str:
+            return jsonify({"error": "Date parameter missing"}), 400
+        date_obj = datetime.strptime(date_str, "%d-%m-%Y").date()
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce').dt.date
+        result = df[df["date"] == date_obj].drop_duplicates("store_location").sort_values("ai_score", ascending=False).reset_index(drop=True)
+        result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
+        return jsonify(result.to_dict(orient="records"))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# === CHARTS ENDPOINT for Chart.js ===
+@app.route('/waste_chart_data', methods=['GET'])
+def waste_chart_data():
+    try:
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce')
+        df = df.dropna(subset=["date"])
+
+        chart_data = df.groupby("date")["waste_generated_kg"].sum().reset_index()
+        chart_data["date"] = chart_data["date"].dt.strftime("%d-%m-%Y")
+        return jsonify({
+            "labels": chart_data["date"].tolist(),
+            "data": chart_data["waste_generated_kg"].tolist()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# === MAIN ===
+if __name__ == '__main__':
+    print("✅ Starting Flask...")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
