@@ -118,6 +118,41 @@ def chart_smart_bulk():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+# === COMBINED CHART DATA for Page 3 and Page 5 ===
+@app.route('/combined_chart_data', methods=['GET'])
+def combined_chart_data():
+    try:
+        result = {}
+
+        # Page 3 chart (smart bulk)
+        if not last_recommendation_df.empty:
+            grouped_bulk = last_recommendation_df.groupby("category")["stock"].sum().reset_index()
+            result["bulk_chart"] = {
+                "labels": grouped_bulk["category"].tolist(),
+                "data": grouped_bulk["stock"].tolist()
+            }
+        else:
+            result["bulk_chart"] = {"labels": [], "data": []}
+
+        # Page 5 chart (waste generated per day)
+        if os.path.exists("data/ai_leaderboard.csv"):
+            df = pd.read_csv("data/ai_leaderboard.csv")
+            df["date"] = pd.to_datetime(df["date"], errors='coerce')
+            df = df.dropna(subset=["date"])
+            forecast_chart = df.groupby("date")["waste_generated_kg"].sum().reset_index()
+            forecast_chart["date"] = forecast_chart["date"].dt.strftime("%d-%m-%Y")
+            result["forecast_chart"] = {
+                "labels": forecast_chart["date"].tolist(),
+                "data": forecast_chart["waste_generated_kg"].tolist()
+            }
+        else:
+            result["forecast_chart"] = {"labels": [], "data": []}
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 # === RISK PREDICTOR ===
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -247,22 +282,6 @@ def ai_leaderboard_by_date():
         result = df[df["date"] == date_obj].drop_duplicates("store_location").sort_values("ai_score", ascending=False).reset_index(drop=True)
         result["badge"] = ["🥇", "🥈", "🥉"] + [""] * (len(result) - 3)
         return jsonify(result.to_dict(orient="records"))
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-# === CHART DATA for AI Leaderboard ===
-@app.route('/waste_chart_data', methods=['GET'])
-def waste_chart_data():
-    try:
-        df = pd.read_csv(LEADERBOARD_FILE)
-        df["date"] = pd.to_datetime(df["date"], errors='coerce')
-        df = df.dropna(subset=["date"])
-        chart_data = df.groupby("date")["waste_generated_kg"].sum().reset_index()
-        chart_data["date"] = chart_data["date"].dt.strftime("%d-%m-%Y")
-        return jsonify({
-            "labels": chart_data["date"].tolist(),
-            "data": chart_data["waste_generated_kg"].tolist()
-        })
     except Exception as e:
         return jsonify({"error": str(e)})
 
