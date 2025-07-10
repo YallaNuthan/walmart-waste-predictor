@@ -7,149 +7,178 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; overflow-x: hidden; }
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
 
-    .sidebar { height: 100%; width: 250px; position: fixed; top: 0; left: -250px; background-color: #003087; overflow-x: hidden; transition: 0.3s; padding-top: 60px; z-index: 1000; }
-    .sidebar a { padding: 16px 24px; text-decoration: none; font-size: 18px; color: #fff; display: block; }
+    .sidebar {
+      height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
+      background-color: #003087; overflow-x: hidden; transition: 0.3s;
+      padding-top: 60px; z-index: 1000;
+    }
+    .sidebar a {
+      padding: 16px 24px; text-decoration: none; font-size: 18px;
+      color: #fff; display: block;
+    }
     .sidebar a:hover { background-color: #0050c2; }
+    .openbtn {
+      font-size: 24px; cursor: pointer; background-color: #003087; color: white;
+      padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100;
+    }
 
-    .openbtn { font-size: 24px; cursor: pointer; background-color: #003087; color: white; padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100; }
+    .bell-icon, .chart-icon {
+      position: fixed; top: 14px; font-size: 24px; cursor: pointer; z-index: 1100;
+    }
+    .bell-icon { right: 60px; }
+    .chart-icon { right: 20px; }
 
-    .icon-group { position: fixed; top: 14px; right: 20px; display: flex; gap: 15px; z-index: 1100; }
-    .icon-group i { font-size: 22px; cursor: pointer; position: relative; }
-
-    .alert-box, .chart-popup { position: fixed; top: 50px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px; display: none; z-index: 1200; }
-
-    .chart-popup canvas { width: 300px !important; height: 200px !important; }
+    .alert-box, .chart-popup {
+      position: fixed; background: white; border: 1px solid #ccc;
+      border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px;
+      display: none; z-index: 1200;
+    }
+    .alert-box {
+      top: 50px; right: 60px; width: 320px; max-height: 400px; overflow-y: auto;
+    }
+    .chart-popup {
+      top: 50px; right: 20px; width: 360px; height: 250px;
+    }
 
     #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
-    .container { background-color: white; border-radius: 10px; padding: 30px; margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-
+    .container {
+      background-color: white; border-radius: 10px; padding: 30px;
+      margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
     h2 { text-align: center; color: #003087; }
-    button { background-color: #0071ce; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 10px 8px 0; }
+    label { display: block; margin: 10px 0 6px; font-weight: bold; }
+    input, select {
+      width: 100%; padding: 10px; font-size: 16px; margin-bottom: 12px;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0071ce; color: white; padding: 10px 20px;
+      border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
+    }
     button:hover { background-color: #005bbb; }
-
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd; padding: 12px; text-align: center;
+    }
+    th { background-color: #0071ce; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    .result { margin-top: 12px; font-weight: bold; }
     .page { display: none; }
-    .active { display: block !important; }
-    .welcome { text-align: center; margin-top: 100px; font-size: 26px; color: #003087; padding: 0 20px; }
+    .active { display: block; }
+    .welcome {
+      text-align: center; margin-top: 100px; font-size: 26px;
+      color: #003087; padding: 0 20px;
+    }
+    .alert-item {
+      border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
+    }
   </style>
 </head>
 <body>
-
-<!-- Sidebar -->
 <div id="mySidebar" class="sidebar">
-  <a href="javascript:void(0)" onclick="navigate('page1')">📦 Smart Bulk Recommendations</a>
-  <a href="javascript:void(0)" onclick="navigate('page2')">⚠️ Waste Risk Predictor</a>
-  <a href="javascript:void(0)" onclick="navigate('page3')">📊 Demand Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page4')">🏆 AI Leaderboard</a>
+  <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
+  <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
+  <a href="javascript:void(0)" onclick="navigate('page3')">📦 Smart Recommendations</a>
+  <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
+  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
 </div>
 
-<!-- Top Icons -->
-<div class="icon-group">
-  <i class="bell-icon" onclick="toggleAlerts()">🔔</i>
-  <i id="chartIcon" onmouseover="showChartPopup()" onmouseout="hideChartPopup()">📊</i>
-</div>
-
+<button class="openbtn" onclick="toggleSidebar()">☰</button>
+<div class="bell-icon" onclick="toggleAlerts()">🔔</div>
+<div class="chart-icon" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
 <div id="alertBox" class="alert-box"></div>
-<div id="chartPopup" class="chart-popup"><canvas id="chartCanvas"></canvas></div>
+<div id="chartPopup" class="chart-popup">
+  <canvas id="wasteChart"></canvas>
+</div>
 
-<!-- Main Content -->
 <div id="main">
   <div id="welcome" class="welcome">
     <h1>👋 Welcome to Walmart Waste Predictor</h1>
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
-  <!-- Pages -->
-  <div class="page container" id="page1"><h2>📦 Smart Bulk Recommendations</h2></div>
-  <div class="page container" id="page2"><h2>⚠️ Waste Risk Predictor</h2></div>
-  <div class="page container" id="page3"><h2>📊 Demand Forecast</h2></div>
-  <div class="page container" id="page4"><h2>🏆 AI Leaderboard</h2></div>
+  <!-- PAGE CONTENTS -->
+  <div id="page1" class="page container"> <!-- Demand Forecast Page -->
+    <h2>📈 Demand Forecast</h2>
+    <!-- Form here -->
+  </div>
+
+  <div id="page2" class="page container"> <!-- Waste Risk -->
+    <h2>🗑 Waste Risk Prediction</h2>
+    <!-- Form here -->
+  </div>
+
+  <div id="page3" class="page container"> <!-- Smart Recommendations -->
+    <h2>📦 Smart Bulk Recommendations</h2>
+    <!-- Upload & Table here -->
+  </div>
+
+  <div id="page4" class="page container"> <!-- AI Leaderboard -->
+    <h2>🏁 AI Leaderboard</h2>
+    <!-- Upload and Leaderboard Tables -->
+  </div>
+
+  <div id="page5" class="page container"> <!-- Waste Forecast -->
+    <h2>📉 Waste Forecast</h2>
+    <!-- Forecast CSV Upload -->
+  </div>
 </div>
 
-<!-- JS -->
 <script>
-let currentPage = '';
+const BASE = "https://walmart-waste-predictor.onrender.com";
+let chartInstance = null;
 
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
-
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   document.getElementById("welcome").style.display = "none";
-  document.getElementById("alertBox").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
+  document.getElementById("alertBox").style.display = "none";
+}
+
+// 📊 Chart Hover Logic
+function showChart() {
+  document.getElementById("chartPopup").style.display = "block";
+  loadChartData();
+}
+function hideChart() {
   document.getElementById("chartPopup").style.display = "none";
-  currentPage = id;
 }
-
-function toggleAlerts() {
-  const box = document.getElementById("alertBox");
-  box.style.display = box.style.display === "block" ? "none" : "block";
-  box.innerHTML = "<h4>⚠️ Alerts</h4><hr><p>No alerts right now.</p>";
-}
-
-let chartInstance = null;
-function showChartPopup() {
-  const popup = document.getElementById("chartPopup");
-  popup.style.display = "block";
-
-  const ctx = document.getElementById("chartCanvas").getContext("2d");
+async function loadChartData() {
+  const res = await fetch(`${BASE}/waste_chart_data`);
+  const json = await res.json();
+  if (!json || !json.labels) return;
+  const ctx = document.getElementById("wasteChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
-
-  if (currentPage === 'page1') {
-    fetch("http://localhost:5000/chart_smart_bulk")
-      .then(res => res.json())
-      .then(data => {
-        chartInstance = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: data.labels,
-            datasets: [{
-              label: 'Stock by Category',
-              data: data.data,
-              backgroundColor: '#0071ce'
-            }]
-          },
-          options: { responsive: true, plugins: { legend: { display: false } } }
-        });
-      });
-  } else if (currentPage === 'page4') {
-    fetch("http://localhost:5000/waste_chart_data")
-      .then(res => res.json())
-      .then(data => {
-        chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: data.labels,
-            datasets: [{
-              label: 'Waste Generated (kg)',
-              data: data.data,
-              borderColor: '#003087',
-              fill: false
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } }
-          }
-        });
-      });
-  } else {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    popup.style.display = "none";
-  }
-}
-
-function hideChartPopup() {
-  setTimeout(() => {
-    document.getElementById("chartPopup").style.display = "none";
-  }, 500);
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: json.labels,
+      datasets: [{
+        label: "Total Waste Generated (kg)",
+        data: json.data,
+        backgroundColor: "rgba(0, 112, 192, 0.2)",
+        borderColor: "#0070c0",
+        borderWidth: 2,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
 }
 </script>
-
 </body>
 </html>
