@@ -8,17 +8,27 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; overflow-x: hidden; }
+
     .sidebar { height: 100%; width: 250px; position: fixed; top: 0; left: -250px; background-color: #003087; overflow-x: hidden; transition: 0.3s; padding-top: 60px; z-index: 1000; }
     .sidebar a { padding: 16px 24px; text-decoration: none; font-size: 18px; color: #fff; display: block; }
     .sidebar a:hover { background-color: #0050c2; }
+
     .openbtn { font-size: 24px; cursor: pointer; background-color: #003087; color: white; padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100; }
-    .bell-icon { position: fixed; top: 14px; right: 20px; font-size: 24px; cursor: pointer; z-index: 1100; }
-    .alert-box { position: fixed; top: 50px; right: 20px; width: 320px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px; display: none; z-index: 1200; }
+
+    .icon-group { position: fixed; top: 14px; right: 20px; display: flex; gap: 15px; z-index: 1100; }
+    .icon-group i { font-size: 22px; cursor: pointer; position: relative; }
+
+    .alert-box, .chart-popup { position: fixed; top: 50px; right: 20px; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px; display: none; z-index: 1200; }
+
+    .chart-popup canvas { width: 300px !important; height: 200px !important; }
+
     #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
     .container { background-color: white; border-radius: 10px; padding: 30px; margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
     h2 { text-align: center; color: #003087; }
     button { background-color: #0071ce; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 10px 8px 0; }
     button:hover { background-color: #005bbb; }
+
     .page { display: none; }
     .active { display: block !important; }
     .welcome { text-align: center; margin-top: 100px; font-size: 26px; color: #003087; padding: 0 20px; }
@@ -32,14 +42,16 @@
   <a href="javascript:void(0)" onclick="navigate('page2')">⚠️ Waste Risk Predictor</a>
   <a href="javascript:void(0)" onclick="navigate('page3')">📊 Demand Forecast</a>
   <a href="javascript:void(0)" onclick="navigate('page4')">🏆 AI Leaderboard</a>
-  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Trends</a>
-  <a href="javascript:void(0)" onclick="navigate('page6')">📈 Category-wise Charts</a>
 </div>
 
-<!-- Top Buttons -->
-<button class="openbtn" onclick="toggleSidebar()">☰</button>
-<div class="bell-icon" onclick="toggleAlerts()">🔔</div>
+<!-- Top Icons -->
+<div class="icon-group">
+  <i class="bell-icon" onclick="toggleAlerts()">🔔</i>
+  <i id="chartIcon" onmouseover="showChartPopup()" onmouseout="hideChartPopup()">📊</i>
+</div>
+
 <div id="alertBox" class="alert-box"></div>
+<div id="chartPopup" class="chart-popup"><canvas id="chartCanvas"></canvas></div>
 
 <!-- Main Content -->
 <div id="main">
@@ -49,26 +61,16 @@
   </div>
 
   <!-- Pages -->
-  <div class="page container" id="page1"><h2>Page 1</h2></div>
-  <div class="page container" id="page2"><h2>Page 2</h2></div>
-  <div class="page container" id="page3"><h2>Page 3</h2></div>
-  <div class="page container" id="page4"><h2>Page 4</h2></div>
-
-  <!-- === PAGE 5: Line Chart for Waste Trends === -->
-  <div class="page container" id="page5">
-    <h2>📉 Waste Trend Over Time</h2>
-    <canvas id="wasteLineChart" height="100"></canvas>
-  </div>
-
-  <!-- === PAGE 6: Pie Chart of Waste by Category === -->
-  <div class="page container" id="page6">
-    <h2>📊 Category-wise Waste Distribution</h2>
-    <canvas id="wastePieChart" height="100"></canvas>
-  </div>
+  <div class="page container" id="page1"><h2>📦 Smart Bulk Recommendations</h2></div>
+  <div class="page container" id="page2"><h2>⚠️ Waste Risk Predictor</h2></div>
+  <div class="page container" id="page3"><h2>📊 Demand Forecast</h2></div>
+  <div class="page container" id="page4"><h2>🏆 AI Leaderboard</h2></div>
 </div>
 
 <!-- JS -->
 <script>
+let currentPage = '';
+
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
@@ -80,10 +82,8 @@ function navigate(id) {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("alertBox").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
-
-  // Load charts dynamically
-  if (id === "page5") loadWasteLineChart();
-  if (id === "page6") loadWasteCategoryChart();
+  document.getElementById("chartPopup").style.display = "none";
+  currentPage = id;
 }
 
 function toggleAlerts() {
@@ -92,60 +92,62 @@ function toggleAlerts() {
   box.innerHTML = "<h4>⚠️ Alerts</h4><hr><p>No alerts right now.</p>";
 }
 
-// === LINE CHART: Waste Over Time ===
-function loadWasteLineChart() {
-  fetch('http://localhost:5000/waste_chart_data')
-    .then(res => res.json())
-    .then(data => {
-      const ctx = document.getElementById('wasteLineChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: data.labels,
-          datasets: [{
-            label: 'Total Waste (kg)',
-            data: data.data,
-            backgroundColor: 'rgba(0,112,192,0.3)',
-            borderColor: '#003087',
-            borderWidth: 2,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+let chartInstance = null;
+function showChartPopup() {
+  const popup = document.getElementById("chartPopup");
+  popup.style.display = "block";
+
+  const ctx = document.getElementById("chartCanvas").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  if (currentPage === 'page1') {
+    fetch("http://localhost:5000/chart_smart_bulk")
+      .then(res => res.json())
+      .then(data => {
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Stock by Category',
+              data: data.data,
+              backgroundColor: '#0071ce'
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
       });
-    })
-    .catch(err => alert("Error loading waste trend chart: " + err));
+  } else if (currentPage === 'page4') {
+    fetch("http://localhost:5000/waste_chart_data")
+      .then(res => res.json())
+      .then(data => {
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Waste Generated (kg)',
+              data: data.data,
+              borderColor: '#003087',
+              fill: false
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      });
+  } else {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    popup.style.display = "none";
+  }
 }
 
-// === PIE CHART: Waste by Category (Mock Data for Now) ===
-function loadWasteCategoryChart() {
-  const ctx = document.getElementById('wastePieChart').getContext('2d');
-  const categories = ["Fruits", "Dairy", "Bakery", "Vegetables", "Frozen"];
-  const values = [120, 90, 60, 180, 50]; // Replace with real backend data if needed
-
-  new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: categories,
-      datasets: [{
-        data: values,
-        backgroundColor: ['#0071ce', '#009688', '#f4b400', '#e91e63', '#8e44ad']
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom'
-        }
-      }
-    }
-  });
+function hideChartPopup() {
+  setTimeout(() => {
+    document.getElementById("chartPopup").style.display = "none";
+  }, 500);
 }
 </script>
 
