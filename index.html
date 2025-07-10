@@ -32,9 +32,8 @@
   <a href="javascript:void(0)" onclick="navigate('page2')">⚠️ Waste Risk Predictor</a>
   <a href="javascript:void(0)" onclick="navigate('page3')">📊 Demand Forecast</a>
   <a href="javascript:void(0)" onclick="navigate('page4')">🏆 AI Leaderboard</a>
-  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
-  <a href="javascript:void(0)" onclick="navigate('page6')">🎮 Simulation Game</a>
-  <a href="javascript:void(0)" onclick="navigate('page7'); loadChart()">📈 Waste Analytics</a>
+  <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Trends</a>
+  <a href="javascript:void(0)" onclick="navigate('page6')">📈 Category-wise Charts</a>
 </div>
 
 <!-- Top Buttons -->
@@ -54,71 +53,99 @@
   <div class="page container" id="page2"><h2>Page 2</h2></div>
   <div class="page container" id="page3"><h2>Page 3</h2></div>
   <div class="page container" id="page4"><h2>Page 4</h2></div>
-  <div class="page container" id="page5"><h2>Page 5</h2></div>
-  <div class="page container" id="page6"><h2>🎮 Simulation Game (Page 6)</h2></div>
 
-  <!-- === PAGE 7: WASTE CHART === -->
-  <div class="page container" id="page7">
-    <h2>📈 Waste Generated Over Time</h2>
-    <canvas id="wasteChart" style="max-width:100%; height:400px;"></canvas>
+  <!-- === PAGE 5: Line Chart for Waste Trends === -->
+  <div class="page container" id="page5">
+    <h2>📉 Waste Trend Over Time</h2>
+    <canvas id="wasteLineChart" height="100"></canvas>
+  </div>
+
+  <!-- === PAGE 6: Pie Chart of Waste by Category === -->
+  <div class="page container" id="page6">
+    <h2>📊 Category-wise Waste Distribution</h2>
+    <canvas id="wastePieChart" height="100"></canvas>
   </div>
 </div>
 
-<!-- Scripts -->
+<!-- JS -->
 <script>
 function toggleSidebar() {
   const bar = document.getElementById("mySidebar");
   bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
 }
+
 function navigate(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   document.getElementById("welcome").style.display = "none";
   document.getElementById("alertBox").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
+
+  // Load charts dynamically
+  if (id === "page5") loadWasteLineChart();
+  if (id === "page6") loadWasteCategoryChart();
 }
+
 function toggleAlerts() {
   const box = document.getElementById("alertBox");
   box.style.display = box.style.display === "block" ? "none" : "block";
   box.innerHTML = "<h4>⚠️ Alerts</h4><hr><p>No alerts right now.</p>";
 }
 
-// === Chart.js Integration ===
-let chartInstance = null;
-function loadChart() {
-  fetch("http://localhost:5000/waste_chart_data")
+// === LINE CHART: Waste Over Time ===
+function loadWasteLineChart() {
+  fetch('http://localhost:5000/waste_chart_data')
     .then(res => res.json())
     .then(data => {
-      const ctx = document.getElementById("wasteChart").getContext("2d");
-      if (chartInstance) chartInstance.destroy();
-      chartInstance = new Chart(ctx, {
+      const ctx = document.getElementById('wasteLineChart').getContext('2d');
+      new Chart(ctx, {
         type: 'line',
         data: {
           labels: data.labels,
           datasets: [{
-            label: "Total Waste Generated (kg)",
+            label: 'Total Waste (kg)',
             data: data.data,
-            borderColor: "#0071ce",
-            backgroundColor: "rgba(0,113,206,0.1)",
-            tension: 0.4,
-            pointRadius: 4,
+            backgroundColor: 'rgba(0,112,192,0.3)',
+            borderColor: '#003087',
+            borderWidth: 2,
             fill: true
           }]
         },
         options: {
           responsive: true,
           scales: {
-            x: { title: { display: true, text: "Date" }},
-            y: { title: { display: true, text: "Waste (kg)" }}
-          },
-          plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: 'Daily Waste Generation Chart' }
+            y: { beginAtZero: true }
           }
         }
       });
     })
-    .catch(err => alert("Failed to load chart.\n" + err));
+    .catch(err => alert("Error loading waste trend chart: " + err));
+}
+
+// === PIE CHART: Waste by Category (Mock Data for Now) ===
+function loadWasteCategoryChart() {
+  const ctx = document.getElementById('wastePieChart').getContext('2d');
+  const categories = ["Fruits", "Dairy", "Bakery", "Vegetables", "Frozen"];
+  const values = [120, 90, 60, 180, 50]; // Replace with real backend data if needed
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: categories,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#0071ce', '#009688', '#f4b400', '#e91e63', '#8e44ad']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
 }
 </script>
 
