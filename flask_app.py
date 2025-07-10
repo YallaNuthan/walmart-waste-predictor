@@ -229,57 +229,24 @@ def ai_leaderboard_by_date():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# === SIMULATION BACKEND (OPTIONAL) ===
-@app.route('/simulate_day', methods=['POST'])
-def simulate_day():
+# === CHARTS ENDPOINT for Chart.js ===
+@app.route('/waste_chart_data', methods=['GET'])
+def waste_chart_data():
     try:
-        data = request.get_json()
-        day = data.get("day", 1)
-        inputs = data.get("inputs", {})
-        event = data.get("event", {})
+        df = pd.read_csv(LEADERBOARD_FILE)
+        df["date"] = pd.to_datetime(df["date"], errors='coerce')
+        df = df.dropna(subset=["date"])
 
-        if not inputs or not event:
-            return jsonify({"error": "Missing simulation input or event details"}), 400
-
-        milk = int(inputs.get("milk", 0))
-        bananas = int(inputs.get("bananas", 0))
-        bread = int(inputs.get("bread", 0))
-        veggies = int(inputs.get("veggies", 0))
-
-        total_qty = milk + bananas + bread + veggies
-
-        product_prices = {
-            "milk": 40, "bananas": 12, "bread": 35, "veggies": 20
-        }
-
-        revenue = (
-            milk * product_prices["milk"] +
-            bananas * product_prices["bananas"] +
-            bread * product_prices["bread"] +
-            veggies * product_prices["veggies"]
-        ) * 0.8
-
-        spoilage_multiplier = float(event.get("spoiler", 1.0))
-        waste = int(total_qty * (spoilage_multiplier - 1) * 0.2)
-        donation = int(total_qty * 0.1)
-        profit = revenue - waste * 20 + donation * 5
-        karma = (donation * 2 - waste) + int(profit / 100)
-        mood = "😐"
-        if waste > 70: mood = "😠"
-        elif waste < 30 and donation > 10: mood = "😇"
-
+        chart_data = df.groupby("date")["waste_generated_kg"].sum().reset_index()
+        chart_data["date"] = chart_data["date"].dt.strftime("%d-%m-%Y")
         return jsonify({
-            "day": day,
-            "waste_kg": waste,
-            "donation_kg": donation,
-            "profit": round(profit, 2),
-            "karma": karma,
-            "mood": mood,
-            "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M")
+            "labels": chart_data["date"].tolist(),
+            "data": chart_data["waste_generated_kg"].tolist()
         })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)})
 
+# === MAIN ===
 if __name__ == '__main__':
     print("✅ Starting Flask...")
     port = int(os.environ.get("PORT", 5000))
