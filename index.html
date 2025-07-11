@@ -1,3 +1,4 @@
+<!-- Save this as index.html and open in browser -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; margin: 0; }
 
     .sidebar {
       height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
@@ -27,8 +28,8 @@
     .bell-icon, .chart-icon {
       position: fixed; top: 14px; font-size: 24px; cursor: pointer; z-index: 1100;
     }
-    .bell-icon { right: 60px; display: none; }
-    .chart-icon { right: 20px; display: none; }
+    .bell-icon { right: 60px; }
+    .chart-icon { right: 20px; }
 
     .alert-box, .chart-popup {
       position: fixed; background: white; border: 1px solid #ccc;
@@ -42,11 +43,10 @@
       top: 50px; right: 20px; width: 360px; height: 250px;
     }
 
-    #main { transition: margin-left 0.3s; padding: 20px; margin-left: 0; }
+    #main { padding: 20px; margin-left: 0; transition: margin-left 0.3s; }
     .container {
-      background-color: white; border-radius: 10px; padding: 30px;
+      background: white; border-radius: 10px; padding: 30px;
       margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: relative;
     }
     h2 { text-align: center; color: #003087; }
     label { display: block; margin: 10px 0 6px; font-weight: bold; }
@@ -67,12 +67,14 @@
     }
     th { background-color: #0071ce; color: white; }
     tr:nth-child(even) { background-color: #f2f2f2; }
+
     .result { margin-top: 12px; font-weight: bold; }
     .page { display: none; }
     .active { display: block; }
+
     .welcome {
       text-align: center; margin-top: 100px; font-size: 26px;
-      color: #003087; padding: 0 20px;
+      color: #003087;
     }
     .alert-item {
       border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
@@ -89,8 +91,8 @@
 </div>
 
 <button class="openbtn" onclick="toggleSidebar()">☰</button>
-<div class="bell-icon" id="bell" onclick="toggleAlerts()">🔔</div>
-<div class="chart-icon" id="chart" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
+<div class="bell-icon" onclick="toggleAlerts()">🔔</div>
+<div class="chart-icon" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
 <div id="alertBox" class="alert-box"></div>
 <div id="chartPopup" class="chart-popup">
   <canvas id="wasteChart"></canvas>
@@ -102,6 +104,7 @@
     <p>Click ☰ to explore our AI-powered dashboard.</p>
   </div>
 
+  <!-- Demand Forecast -->
   <div id="page1" class="page container">
     <h2>📈 Demand Forecast</h2>
     <label>Previous Sales</label>
@@ -114,18 +117,20 @@
     <div id="df_result" class="result"></div>
   </div>
 
+  <!-- Waste Risk -->
   <div id="page2" class="page container">
     <h2>🗑 Waste Risk Prediction</h2>
     <label>Stock</label>
     <input type="number" id="wr_stock"/>
     <label>Freshness Score</label>
-    <input type="number" id="wr_fresh" step="0.01"/>
+    <input type="number" step="0.01" id="wr_fresh"/>
     <label>Days to Expiry</label>
     <input type="number" id="wr_expiry"/>
     <button onclick="predictWaste()">Predict Risk</button>
     <div id="wr_result" class="result"></div>
   </div>
 
+  <!-- Smart Bulk -->
   <div id="page3" class="page container">
     <h2>📦 Smart Bulk Recommendations</h2>
     <input type="file" id="smart_csv" accept=".csv"/>
@@ -134,6 +139,7 @@
     <table id="smart_table"></table>
   </div>
 
+  <!-- AI Leaderboard -->
   <div id="page4" class="page container">
     <h2>🏁 AI Leaderboard</h2>
     <input type="file" id="leader_csv" accept=".csv"/>
@@ -145,6 +151,7 @@
     <table id="monthly_leader"></table>
   </div>
 
+  <!-- Waste Forecast -->
   <div id="page5" class="page container">
     <h2>📉 Waste Forecast</h2>
     <input type="file" id="waste_csv" accept=".csv"/>
@@ -154,7 +161,7 @@
 </div>
 
 <script>
-const BASE = "https://walmart-waste-predictor.onrender.com";
+const BASE = "http://localhost:5000";  // Change to your deployed backend URL if needed
 let chartInstance = null;
 let latestAlerts = [];
 
@@ -167,10 +174,7 @@ function navigate(id) {
   document.getElementById(id).classList.add("active");
   document.getElementById("welcome").style.display = "none";
   document.getElementById("mySidebar").style.left = "-250px";
-
-  // Only show bell and chart icons on Page 3 & Page 5
-  document.getElementById("bell").style.display = (id === "page3" || id === "page5") ? "block" : "none";
-  document.getElementById("chart").style.display = (id === "page3" || id === "page5") ? "block" : "none";
+  document.getElementById("alertBox").style.display = "none";
 }
 function toggleAlerts() {
   const box = document.getElementById("alertBox");
@@ -238,19 +242,15 @@ async function uploadLeaderboard() {
   document.getElementById("leader_msg").innerText = "Report uploaded!";
   const daily = await fetch(`${BASE}/ai_daily_leaderboard`).then(r => r.json());
   const monthly = await fetch(`${BASE}/ai_monthly_leaderboard`).then(r => r.json());
+  const renderTable = (data, elemId) => {
+    const table = document.getElementById(elemId);
+    table.innerHTML = `<tr>${Object.keys(data[0]).map(k => `<th>${k}</th>`).join("")}</tr>`;
+    data.forEach(row => {
+      table.innerHTML += `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join("")}</tr>`;
+    });
+  };
   renderTable(daily, "daily_leader");
   renderTable(monthly, "monthly_leader");
-}
-function renderTable(data, elemId) {
-  const table = document.getElementById(elemId);
-  if (!data.length) {
-    table.innerHTML = "<tr><td>No data</td></tr>";
-    return;
-  }
-  table.innerHTML = `<tr>${Object.keys(data[0]).map(k => `<th>${k}</th>`).join("")}</tr>`;
-  data.forEach(row => {
-    table.innerHTML += `<tr>${Object.values(row).map(v => `<td>${v}</td>`).join("")}</tr>`;
-  });
 }
 async function uploadWasteCSV() {
   const file = document.getElementById("waste_csv").files[0];
@@ -269,17 +269,17 @@ async function uploadWasteCSV() {
 }
 async function showChart() {
   document.getElementById("chartPopup").style.display = "block";
-  const res = await fetch(`${BASE}/waste_chart_data`);
+  const res = await fetch(`${BASE}/combined_chart_data`);
   const json = await res.json();
   const ctx = document.getElementById("wasteChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: json.labels,
+      labels: json.forecast_chart.labels,
       datasets: [{
-        label: "Total Waste Generated (kg)",
-        data: json.data,
+        label: "Waste Generated (kg)",
+        data: json.forecast_chart.data,
         backgroundColor: "rgba(0,112,192,0.5)",
         borderColor: "#0070c0",
         borderWidth: 2
