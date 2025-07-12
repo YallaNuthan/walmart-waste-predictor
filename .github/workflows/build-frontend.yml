@@ -39,4 +39,4 @@ jobs:
           commit_message: "chore: update frontend build from GH Actions"
           file_pattern: "frontend/**"
           branch: "main"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          
