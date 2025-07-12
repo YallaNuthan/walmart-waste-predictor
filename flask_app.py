@@ -8,7 +8,7 @@ from prophet import Prophet
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
 # Serve built frontend from the "frontend" folder at the site root
-app = Flask(__name__, static_folder='frontend', static_url_path='')
+app = Flask(__name__, static_folder='frontend', static_url_path='/')
 CORS(app)
 
 # ─── Load Models ───────────────────────────────────────────────────────────────
