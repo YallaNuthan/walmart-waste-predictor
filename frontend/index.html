@@ -8,19 +8,19 @@
     <meta name="author" content="Walmart Sparkathon Team" />
     <meta name="keywords" content="walmart, food waste, AI prediction, demand forecasting, sustainability, retail analytics" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="https://walmart-waste-predictor.onrender.com" />
-    <meta property="og:title"       content="Walmart Waste Predictor – AI‑Powered Food Waste Management" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://walmart-waste-predictor.onrender.com" />
+    <meta property="og:title" content="Walmart Waste Predictor – AI‑Powered Food Waste Management" />
     <meta property="og:description" content="Revolutionary AI solution reducing food waste through predictive analytics, real‑time alerts, and smart redistribution strategies." />
-    <meta property="og:image"       content="https://walmart-waste-predictor.onrender.com/og-image.jpg" />
+    <meta property="og:image" content="https://walmart-waste-predictor.onrender.com/og-image.jpg" />
 
     <!-- Twitter -->
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:url"         content="https://walmart-waste-predictor.onrender.com" />
-    <meta name="twitter:title"       content="Walmart Waste Predictor – AI‑Powered Food Waste Management" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://walmart-waste-predictor.onrender.com" />
+    <meta name="twitter:title" content="Walmart Waste Predictor – AI‑Powered Food Waste Management" />
     <meta name="twitter:description" content="Revolutionary AI solution reducing food waste through predictive analytics and smart redistribution." />
-    <meta name="twitter:image"       content="https://walmart-waste-predictor.onrender.com/og-image.jpg" />
+    <meta name="twitter:image" content="https://walmart-waste-predictor.onrender.com/og-image.jpg" />
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
@@ -34,87 +34,56 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Lovable UI assets (do not override custom dashboard) -->
+    <!-- Lovable UI assets -->
     <link rel="stylesheet" href="/assets/index-CF7nD4AK.css" />
     <script type="module" src="/assets/index-BOC2bd3T.js"></script>
 
-    <!-- Custom dashboard styles (ensure they come after Lovable CSS) -->
+    <!-- Dashboard custom styles -->
     <style>
       * { box-sizing: border-box; }
       body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; margin: 0; }
 
-      /* Sidebar */
-      .sidebar {
-        height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
-        background-color: #003087; transition: 0.3s; padding-top: 60px; z-index: 1000;
-      }
-      .sidebar a {
-        display: block; padding: 16px 24px; color: #fff; text-decoration: none; font-size: 18px;
-      }
-      .sidebar a:hover { background-color: #0050c2; }
+      .sidebar { position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: #003087; padding-top: 60px; transition: 0.3s; z-index: 1000; }
+      .sidebar a { display: block; padding: 16px 24px; color: #fff; text-decoration: none; font-size: 18px; }
+      .sidebar a:hover { background: #0050c2; }
+      .openbtn { position: fixed; top:10px; left:10px; z-index:1100; background:#003087; color:#fff; border:none; padding:12px 18px; font-size:24px; cursor:pointer; border-radius:4px; }
 
-      /* Buttons & icons */
-      .openbtn {
-        position: fixed; top: 10px; left: 10px; z-index: 1100;
-        background-color: #003087; color: #fff; border: none; padding: 12px 18px;
-        font-size: 24px; cursor: pointer; border-radius: 4px;
-      }
-      .bell-icon, .chart-icon {
-        position: fixed; top: 14px; font-size: 24px; cursor: pointer; z-index: 1100;
-      }
-      .bell-icon { right: 60px; }
-      .chart-icon { right: 20px; }
+      .bell-icon, .chart-icon { position: fixed; top:14px; font-size:24px; cursor:pointer; z-index:1100; }
+      .bell-icon { right:60px; }
+      .chart-icon { right:20px; }
 
-      /* Popups */
-      .alert-box, .chart-popup {
-        position: fixed; background: #fff; border: 1px solid #ccc;
-        border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        padding: 16px; display: none; z-index: 1200;
-      }
-      .alert-box { top: 50px; right: 60px; width: 320px; max-height: 400px; overflow-y: auto; }
-      .chart-popup { top: 50px; right: 20px; width: 360px; height: 250px; }
+      .alert-box, .chart-popup { position: fixed; background:#fff; border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); padding:16px; display:none; z-index:1200; }
+      .alert-box { top:50px; right:60px; width:320px; max-height:400px; overflow-y:auto; }
+      .chart-popup { top:50px; right:20px; width:360px; height:250px; }
 
-      /* Main content */
-      #main { padding: 20px; margin-left: 0; transition: margin-left 0.3s; }
-      .container {
-        max-width: 1100px; margin: 20px auto; background: #fff;
-        border-radius: 10px; padding: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      }
+      #main { padding:20px; margin-left:0; transition:margin-left 0.3s; }
+      .container { max-width:1100px; margin:20px auto; background:#fff; border-radius:10px; padding:30px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 
-      /* Typography & tables */
-      h2 { text-align: center; color: #003087; margin-bottom: 20px; }
-      label { font-weight: bold; margin-top: 12px; display: block; }
-      input, select {
-        width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px;
-        font-size: 16px; border: 1px solid #ccc; border-radius: 6px;
-      }
-      button { 
-        background-color: #0071ce; color: #fff; border: none; padding: 10px 20px;
-        font-size: 16px; border-radius: 6px; cursor: pointer;
-      }
-      button:hover { background-color: #005bbb; }
-      table {
-        width: 100%; border-collapse: collapse; margin-top: 20px;
-      }
-      th, td {
-        border: 1px solid #ddd; padding: 12px; text-align: center;
-      }
-      th { background-color: #0071ce; color: #fff; }
-      tr:nth-child(even) { background-color: #f2f2f2; }
+      h2 { text-align:center; color:#003087; margin-bottom:20px; }
+      label { display:block; margin:10px 0 6px; font-weight:bold; }
+      input, select { width:100%; padding:10px; font-size:16px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px; }
+      button { background:#0071ce; color:#fff; border:none; padding:10px 20px; font-size:16px; border-radius:6px; cursor:pointer; }
+      button:hover { background:#005bbb; }
 
-      .result { margin-top: 12px; font-weight: bold; }
-      .page { display: none; }
-      .active { display: block; }
+      table { width:100%; border-collapse:collapse; margin-top:20px; }
+      th, td { border:1px solid #ddd; padding:12px; text-align:center; }
+      th { background:#0071ce; color:#fff; }
+      tr:nth-child(even) { background:#f2f2f2; }
 
-      .welcome {
-        text-align: center; margin-top: 100px; font-size: 26px; color: #003087;
-      }
-      .alert-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; }
+      .result { margin-top:12px; font-weight:bold; }
+      .page { display:none; }
+      .active { display:block; }
+
+      .welcome { text-align:center; margin-top:100px; font-size:26px; color:#003087; }
+      .alert-item { border-bottom:1px solid #eee; padding:10px 0; font-size:14px; }
     </style>
   </head>
 
   <body>
-    <!-- Dashboard sidebar & controls -->
+    <!-- Lovable homepage UI -->
+    <div id="lovable-root"></div>
+
+    <!-- Dashboard UI -->
     <div id="mySidebar" class="sidebar">
       <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
       <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
@@ -122,23 +91,19 @@
       <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
       <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
     </div>
-
     <button class="openbtn" onclick="toggleSidebar()">☰</button>
     <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
     <div class="chart-icon" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
     <div id="alertBox" class="alert-box"></div>
-    <div id="chartPopup" class="chart-popup">
-      <canvas id="wasteChart"></canvas>
-    </div>
+    <div id="chartPopup" class="chart-popup"><canvas id="wasteChart"></canvas></div>
 
-    <!-- Main content area -->
     <div id="main">
       <div id="welcome" class="welcome">
         <h1>👋 Welcome to Walmart Waste Predictor</h1>
         <p>Click ☰ to explore our AI‑powered dashboard.</p>
       </div>
 
-      <!-- Page 1: Demand Forecast -->
+      <!-- Page1: Demand Forecast -->
       <div id="page1" class="page container">
         <h2>📈 Demand Forecast</h2>
         <label>Previous Sales</label><input type="number" id="df_prev"/>
@@ -148,7 +113,7 @@
         <div id="df_result" class="result"></div>
       </div>
 
-      <!-- Page 2: Waste Risk Prediction -->
+      <!-- Page2: Waste Risk -->
       <div id="page2" class="page container">
         <h2>🗑 Waste Risk Prediction</h2>
         <label>Stock</label><input type="number" id="wr_stock"/>
@@ -158,7 +123,7 @@
         <div id="wr_result" class="result"></div>
       </div>
 
-      <!-- Page 3: Smart Recommendations -->
+      <!-- Page3: Smart Recommendations -->
       <div id="page3" class="page container">
         <h2>📦 Smart Bulk Recommendations</h2>
         <input type="file" id="smart_csv" accept=".csv"/><button onclick="uploadSmartCSV()">Upload & Analyze</button>
@@ -166,7 +131,7 @@
         <table id="smart_table"></table>
       </div>
 
-      <!-- Page 4: AI Leaderboard -->
+      <!-- Page4: AI Leaderboard -->
       <div id="page4" class="page container">
         <h2>🏁 AI Leaderboard</h2>
         <input type="file" id="leader_csv" accept=".csv"/><button onclick="uploadLeaderboard()">Upload Report</button>
@@ -175,7 +140,7 @@
         <h3>📆 Monthly</h3><table id="monthly_leader"></table>
       </div>
 
-      <!-- Page 5: Waste Forecast -->
+      <!-- Page5: Waste Forecast -->
       <div id="page5" class="page container">
         <h2>📉 Waste Forecast</h2>
         <input type="file" id="waste_csv" accept=".csv"/><button onclick="uploadWasteCSV()">Forecast Waste</button>
@@ -183,7 +148,6 @@
       </div>
     </div>
 
-    <!-- Dashboard script logic -->
     <script>
       const BASE = window.location.origin;
       let chartInstance = null, latestAlerts = [];
@@ -195,9 +159,9 @@
       function navigate(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
         document.getElementById(id).classList.add("active");
-        document.getElementById("welcome").style.display = "none";
-        document.getElementById("mySidebar").style.left = "-250px";
-        document.getElementById("alertBox").style.display = "none";
+        welcome.style.display = "none";
+        mySidebar.style.left = "-250px";
+        alertBox.style.display = "none";
       }
       function toggleAlerts() {
         const box = document.getElementById("alertBox");
