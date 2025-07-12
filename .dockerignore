@@ -1,11 +1,19 @@
-# Ignore local dependency folders
-node_modules
-dist
-build
+# ── Exclude raw Lovable source ─────────────────────────────────────────────
+lovable‑ui/
 
-# Ignore Git folder and metadata
+# ── Exclude local frontend build/dev files ─────────────────────────────────
+node_modules/
+build/
+dist/
+frontend/src/
+frontend/public/
+
+# ── Exclude git and GitHub Actions ─────────────────────────────────────────
 .git
 .gitignore
+.github/
 
-# OS files
+# ── Exclude OS and Python caches ────────────────────────────────────────────
 .DS_Store
+__pycache__/
+*.py[cod]
