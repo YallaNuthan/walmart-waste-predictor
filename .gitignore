@@ -1,21 +1,21 @@
-# ── Lovable‑UI source: ignore its deps & build
-lovable-ui/node_modules/
-lovable-ui/dist/
-
-# ── Backend caches
+# ── Python cache files ─────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 
-# ── Top‑level Node & build dirs
+# ── Lovable‑UI source: ignore its dependencies & build output ──────────────
+lovable-ui/node_modules/
+lovable-ui/dist/
+
+# ── Repo‑root Node modules & build dirs ────────────────────────────────────
 node_modules/
 build/
 dist/
 
-# ── We WANT to track frontend/ (our built UI)
+# ── Environment files (if any) ─────────────────────────────────────────────
+.env
 
-# ── Git metadata
-.git
-.github/
+# ── Editor settings ────────────────────────────────────────────────────────
+.vscode/
 
-# ── OS files
+# ── OS metadata ───────────────────────────────────────────────────────────
 .DS_Store
