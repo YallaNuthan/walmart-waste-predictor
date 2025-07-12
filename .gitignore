@@ -1,21 +1,21 @@
-# ── Python cache files ─────────────────────────────────────────────────────
+# ── Python cache files
 __pycache__/
 *.py[cod]
 
-# ── Lovable‑UI source: ignore its dependencies & build output ──────────────
+# ── Lovable‑UI source: ignore its dependencies & build output
 lovable-ui/node_modules/
 lovable-ui/dist/
 
-# ── Repo‑root Node modules & build dirs ────────────────────────────────────
+# ── Repo‑root Node modules & build dirs
 node_modules/
 build/
 dist/
 
-# ── Environment files (if any) ─────────────────────────────────────────────
+# ── Environment files
 .env
 
-# ── Editor settings ────────────────────────────────────────────────────────
+# ── Editor settings
 .vscode/
 
-# ── OS metadata ───────────────────────────────────────────────────────────
+# ── OS metadata
 .DS_Store
