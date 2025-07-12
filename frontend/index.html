@@ -31,14 +31,14 @@
       gtag('config', 'GA_MEASUREMENT_ID');
     </script>
 
-    <!-- Chart.js for charts -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Lovable UI built CSS & JS -->
     <link rel="stylesheet" href="/assets/index-CF7nD4AK.css" />
     <script type="module" src="/assets/index-BOC2bd3T.js"></script>
 
-    <!-- Your custom styles -->
+    <!-- Custom dashboard styles -->
     <style>
       * { box-sizing: border-box; }
       body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; margin: 0; }
@@ -116,6 +116,10 @@
   </head>
 
   <body>
+    <!-- Lovable React app root (if you plan to use it) -->
+    <div id="root"></div>
+
+    <!-- Custom dashboard markup -->
     <div id="mySidebar" class="sidebar">
       <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
       <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
@@ -123,14 +127,11 @@
       <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
       <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
     </div>
-
     <button class="openbtn" onclick="toggleSidebar()">☰</button>
     <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
     <div class="chart-icon" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
     <div id="alertBox" class="alert-box"></div>
-    <div id="chartPopup" class="chart-popup">
-      <canvas id="wasteChart"></canvas>
-    </div>
+    <div id="chartPopup" class="chart-popup"><canvas id="wasteChart"></canvas></div>
 
     <div id="main">
       <div id="welcome" class="welcome">
@@ -138,197 +139,138 @@
         <p>Click ☰ to explore our AI‑powered dashboard.</p>
       </div>
 
-      <!-- Demand Forecast -->
+      <!-- Page 1: Demand Forecast -->
       <div id="page1" class="page container">
         <h2>📈 Demand Forecast</h2>
-        <label>Previous Sales</label>
-        <input type="number" id="df_prev"/>
-        <label>Stock</label>
-        <input type="number" id="df_stock"/>
-        <label>Temperature (°C)</label>
-        <input type="number" id="df_temp"/>
+        <label>Previous Sales</label><input type="number" id="df_prev"/>
+        <label>Stock</label><input type="number" id="df_stock"/>
+        <label>Temperature (°C)</label><input type="number" id="df_temp"/>
         <button onclick="forecastDemand()">Predict Demand</button>
         <div id="df_result" class="result"></div>
       </div>
 
-      <!-- Waste Risk -->
+      <!-- Page 2: Waste Risk -->
       <div id="page2" class="page container">
         <h2>🗑 Waste Risk Prediction</h2>
-        <label>Stock</label>
-        <input type="number" id="wr_stock"/>
-        <label>Freshness Score</label>
-        <input type="number" step="0.01" id="wr_fresh"/>
-        <label>Days to Expiry</label>
-        <input type="number" id="wr_expiry"/>
+        <label>Stock</label><input type="number" id="wr_stock"/>
+        <label>Freshness Score</label><input type="number" step="0.01" id="wr_fresh"/>
+        <label>Days to Expiry</label><input type="number" id="wr_expiry"/>
         <button onclick="predictWaste()">Predict Risk</button>
         <div id="wr_result" class="result"></div>
       </div>
 
-      <!-- Smart Bulk -->
+      <!-- Page 3: Smart Bulk -->
       <div id="page3" class="page container">
         <h2>📦 Smart Bulk Recommendations</h2>
-        <input type="file" id="smart_csv" accept=".csv"/>
-        <button onclick="uploadSmartCSV()">Upload & Analyze</button>
+        <input type="file" id="smart_csv" accept=".csv"/><button onclick="uploadSmartCSV()">Upload & Analyze</button>
         <div id="smart_result" class="result"></div>
         <table id="smart_table"></table>
       </div>
 
-      <!-- AI Leaderboard -->
+      <!-- Page 4: AI Leaderboard -->
       <div id="page4" class="page container">
         <h2>🏁 AI Leaderboard</h2>
-        <input type="file" id="leader_csv" accept=".csv"/>
-        <button onclick="uploadLeaderboard()">Upload Report</button>
+        <input type="file" id="leader_csv" accept=".csv"/><button onclick="uploadLeaderboard()">Upload Report</button>
         <div id="leader_msg" class="result"></div>
-        <h3>📅 Today</h3>
-        <table id="daily_leader"></table>
-        <h3>📆 Monthly</h3>
-        <table id="monthly_leader"></table>
+        <h3>📅 Today</h3><table id="daily_leader"></table>
+        <h3>📆 Monthly</h3><table id="monthly_leader"></table>
       </div>
 
-      <!-- Waste Forecast -->
+      <!-- Page 5: Waste Forecast -->
       <div id="page5" class="page container">
         <h2>📉 Waste Forecast</h2>
-        <input type="file" id="waste_csv" accept=".csv"/>
-        <button onclick="uploadWasteCSV()">Forecast Waste</button>
+        <input type="file" id="waste_csv" accept=".csv"/><button onclick="uploadWasteCSV()">Forecast Waste</button>
         <table id="waste_table"></table>
       </div>
     </div>
 
+    <!-- Custom dashboard scripts -->
     <script>
-      const BASE = "https://walmart-waste-predictor.onrender.com";
-      let chartInstance = null;
-      let latestAlerts = [];
+      const BASE = window.location.origin;
+      let chartInstance = null, latestAlerts = [];
 
       function toggleSidebar() {
         const bar = document.getElementById("mySidebar");
-        bar.style.left = bar.style.left === "0px" ? "-250px" : "0px";
+        bar.style.left = bar.style.left==='0px' ? '-250px' : '0px';
       }
       function navigate(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-        document.getElementById("welcome").style.display = "none";
-        document.getElementById("mySidebar").style.left = "-250px";
-        document.getElementById("alertBox").style.display = "none";
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        welcome.style.display='none'; 
+        mySidebar.style.left='-250px';
+        alertBox.style.display='none';
       }
       function toggleAlerts() {
-        const box = document.getElementById("alertBox");
-        box.style.display = box.style.display === "block" ? "none" : "block";
-        box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
-        if (!latestAlerts.length) {
-          box.innerHTML += "<p>No critical alerts!</p>";
-        } else {
-          latestAlerts.forEach(alert => {
-            box.innerHTML += `
-              <div class="alert-item">
-                🔎 <b>${alert.name}</b> (${alert.store_location})<br>
-                📦 Stock: ${alert.stock}, 📈 Demand: ${alert.daily_demand}<br>
-                🧾 Expiry: ${alert.expiry_date}<br>
-                🧠 Alert: <b>${alert.alert_reason}</b>
-              </div>`;
-          });
-        }
+        const box=alertBox;
+        box.style.display=box.style.display==='block'?'none':'block';
+        box.innerHTML="<h4>⚠️ Smart Alerts</h4><hr>";
+        if(!latestAlerts.length) box.innerHTML+="<p>No critical alerts!</p>";
+        else latestAlerts.forEach(a=>{
+          box.innerHTML+=`
+            <div class="alert-item">
+              🔎 <b>${a.name}</b> (${a.store_location})<br>
+              📦 Stock: ${a.stock}, 📈 Demand: ${a.daily_demand}<br>
+              🧾 Expiry: ${a.expiry_date}<br>
+              🧠 Alert: <b>${a.alert_reason}</b>
+            </div>`;
+        });
       }
       async function forecastDemand() {
-        const res = await fetch(`${BASE}/forecast_demand`, {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            previous_sales: +document.getElementById("df_prev").value,
-            stock: +document.getElementById("df_stock").value,
-            temperature_C: +document.getElementById("df_temp").value
+        const res=await fetch(`${BASE}/forecast_demand`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            previous_sales:+df_prev.value,stock:+df_stock.value,temperature_C:+df_temp.value
           })
-        });
-        const json = await res.json();
-        document.getElementById("df_result").innerText = "Forecasted Demand: " + json.forecasted_demand;
+        }),j=await res.json();
+        df_result.innerText="Forecasted Demand: "+j.forecasted_demand;
       }
       async function predictWaste() {
-        const res = await fetch(`${BASE}/predict`, {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            stock: +document.getElementById("wr_stock").value,
-            freshness_score: +document.getElementById("wr_fresh").value,
-            days_to_expiry: +document.getElementById("wr_expiry").value
+        const res=await fetch(`${BASE}/predict`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            stock:+wr_stock.value,freshness_score:+wr_fresh.value,days_to_expiry:+wr_expiry.value
           })
-        });
-        const json = await res.json();
-        document.getElementById("wr_result").innerText = "Prediction: " + json.prediction;
+        }),j=await res.json();
+        wr_result.innerText="Prediction: "+j.prediction;
       }
       async function uploadSmartCSV() {
-        const file = document.getElementById("smart_csv").files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(`${BASE}/upload_csv`, { method: "POST", body: formData });
-        const json = await res.json();
-        latestAlerts = json.alerts || [];
-        document.getElementById("smart_result").innerText = "Recommendations Loaded!";
-        const table = document.getElementById("smart_table");
-        table.innerHTML = `<tr>${Object.keys(json.recommendations[0]).map(k=>`<th>${k}</th>`).join("")}</tr>`;
-        json.recommendations.forEach(row=>{
-          table.innerHTML += `<tr>${Object.values(row).map(v=>`<td>${v}</td>`).join("")}</tr>`;
-        });
+        const fd=new FormData();fd.append('file',smart_csv.files[0]);
+        const j=await (await fetch(`${BASE}/upload_csv`,{method:'POST',body:fd})).json();
+        latestAlerts=j.alerts||[];smart_result.innerText="Recommendations Loaded!";
+        smart_table.innerHTML="<tr>"+Object.keys(j.recommendations[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>";
+        j.recommendations.forEach(r=>smart_table.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`);
       }
       async function uploadLeaderboard() {
-        const file = document.getElementById("leader_csv").files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        await fetch(`${BASE}/upload_waste_ai`, { method: "POST", body: formData });
-        document.getElementById("leader_msg").innerText = "Report uploaded!";
-        const daily = await fetch(`${BASE}/ai_daily_leaderboard`).then(r=>r.json());
-        const monthly = await fetch(`${BASE}/ai_monthly_leaderboard`).then(r=>r.json());
-        const renderTable=(data,elemId)=>{
-          const table=document.getElementById(elemId);
-          table.innerHTML = `<tr>${Object.keys(data[0]).map(k=>`<th>${k}</th>`).join("")}</tr>`;
-          data.forEach(row=>{
-            table.innerHTML += `<tr>${Object.values(row).map(v=>`<td>${v}</td>`).join("")}</tr>`;
-          });
-        };
-        renderTable(daily,"daily_leader");
-        renderTable(monthly,"monthly_leader");
+        const fd=new FormData();fd.append('file',leader_csv.files[0]);
+        await fetch(`${BASE}/upload_waste_ai`,{method:'POST',body:fd});
+        leader_msg.innerText="Report uploaded!";
+        const daily=await (await fetch(`${BASE}/ai_daily_leaderboard`)).json(),
+              monthly=await (await fetch(`${BASE}/ai_monthly_leaderboard`)).json();
+        ['daily_leader','monthly_leader'].forEach((id,i)=>{
+          const data=i?monthly:daily, tbl=document.getElementById(id);
+          tbl.innerHTML="<tr>"+Object.keys(data[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>";
+          data.forEach(r=>tbl.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`);
+        });
       }
       async function uploadWasteCSV() {
-        const file=document.getElementById("waste_csv").files[0];
-        const formData=new FormData();
-        formData.append("file",file);
-        const json=await fetch(`${BASE}/forecast_waste`,{method:"POST",body:formData}).then(r=>r.json());
-        const table=document.getElementById("waste_table");
-        if(json.length){
-          table.innerHTML = `<tr>${Object.keys(json[0]).map(k=>`<th>${k}</th>`).join("")}</tr>`;
-          json.forEach(row=>{
-            table.innerHTML += `<tr>${Object.values(row).map(v=>`<td>${v}</td>`).join("")}</tr>`;
-          });
-        } else {
-          table.innerHTML = "<tr><td>No forecast data available</td></tr>";
-        }
+        const fd=new FormData();fd.append('file',waste_csv.files[0]);
+        const j=await (await fetch(`${BASE}/forecast_waste`,{method:'POST',body:fd})).json();
+        waste_table.innerHTML=j.length
+          ? "<tr>"+Object.keys(j[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>"+j.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')
+          : "<tr><td>No forecast data available</td></tr>";
       }
       async function showChart() {
-        document.getElementById("chartPopup").style.display="block";
-        const res=await fetch(`${BASE}/combined_chart_data`);
-        const json=await res.json();
-        const ctx=document.getElementById("wasteChart").getContext("2d");
+        chartPopup.style.display='block';
+        const j=await (await fetch(`${BASE}/combined_chart_data`)).json();
+        const ctx=wasteChart.getContext('2d');
         if(chartInstance)chartInstance.destroy();
         chartInstance=new Chart(ctx,{
           type:'bar',
-          data:{
-            labels:json.forecast_chart.labels,
-            datasets:[{
-              label:"Waste Generated (kg)",
-              data:json.forecast_chart.data,
-              backgroundColor:"rgba(0,112,192,0.5)",
-              borderColor:"#0070c0",
-              borderWidth:2
-            }]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            scales:{y:{beginAtZero:true}}
-          }
+          data:{labels:j.forecast_chart.labels,datasets:[{label:'Waste Generated (kg)',data:j.forecast_chart.data,backgroundColor:'rgba(0,112,192,0.5)',borderColor:'#0070c0',borderWidth:2}]},
+          options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
         });
       }
-      function hideChart(){
-        document.getElementById("chartPopup").style.display="none";
-      }
+      function hideChart(){chartPopup.style.display='none';}
     </script>
   </body>
 </html>
