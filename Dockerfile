@@ -1,11 +1,13 @@
 # Stage 1: Build the frontend
 FROM node:18-alpine AS frontend-build
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
 
+# Copy everything up front (but .dockerignore will keep out local node_modules)
+COPY . .
+
+# Install deps fresh according to package-lock.json, then build
+RUN npm ci
+RUN npm run build
 # Stage 2: Build the Python backend & bundle static assets
 FROM python:3.10-slim AS backend-build
 RUN apt-get update && apt-get install -y \
