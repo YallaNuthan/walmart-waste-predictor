@@ -1,0 +1,42 @@
+name: Build Lovable UI → frontend/
+
+on:
+  push:
+    paths:
+      - 'lovable-ui/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        # allow pushing back to the same repo
+        with:
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install & build Lovable UI
+        working-directory: lovable-ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy dist into frontend/
+        run: |
+          rm -rf frontend/*
+          mkdir -p frontend
+          cp -R lovable-ui/dist/* frontend/
+
+      - name: Commit built frontend
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update frontend build from GH Actions"
+          file_pattern: "frontend/**"
+          branch: "main"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
