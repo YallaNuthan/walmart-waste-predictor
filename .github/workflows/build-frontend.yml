@@ -35,6 +35,6 @@ jobs:
       - name: Commit built frontend
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: chore: update frontend build from GH Actions
-          file_pattern: frontend/**
-          branch: main
+          commit_message: "chore: update frontend build from GH Actions"
+          file_pattern: "frontend/**"
+          branch: "main"
