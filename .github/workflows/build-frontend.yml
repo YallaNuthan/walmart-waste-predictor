@@ -1,9 +1,12 @@
-name: Build Lovable UI → frontend/
++ permissions:
++   contents: write
 
-on:
-  push:
-    paths:
-      - 'lovable-ui/**'
+ name: Build Lovable UI → frontend/
+
+ on:
+   push:
+     paths:
+       - 'lovable-ui/**'
 
 jobs:
   build:
