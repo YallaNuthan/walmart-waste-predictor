@@ -1,0 +1,250 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Walmart Waste Predictor Design System - Swiss Style */
+
+@layer base {
+  :root {
+    /* Walmart Brand Colors */
+    --background: 218 20% 96%;           /* #f4f6f9 */
+    --foreground: 216 100% 17%;          /* #003087 sidebar color for text */
+
+    --card: 0 0% 100%;                   /* Pure white cards */
+    --card-foreground: 216 100% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 100% 17%;
+
+    --primary: 206 100% 40%;             /* #0071ce Walmart button blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 218 20% 96%;            /* Subtle background variant */
+    --secondary-foreground: 216 100% 17%;
+
+    --muted: 220 13% 91%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 206 100% 40%;              /* Walmart blue accent */
+    --accent-foreground: 0 0% 100%;
+
+    /* Walmart sidebar navy */
+    --sidebar-bg: 216 100% 17%;          /* #003087 */
+    --sidebar-foreground: 0 0% 100%;
+
+    /* Alert colors */
+    --success: 142 69% 58%;
+    --warning: 45 93% 47%;
+    --error: 0 84% 60%;
+
+    /* Shadows and effects */
+    --shadow-subtle: 0 1px 3px 0 hsl(0 0% 0% / 0.1);
+    --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-elegant: 0 10px 25px -3px hsl(206 100% 40% / 0.1);
+
+    /* Typography scale */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+
+    /* Smooth transitions */
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 206 100% 40%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+  }
+}
+
+@layer components {
+  /* Swiss Design System Components */
+  .walmart-card {
+    @apply bg-card rounded-lg shadow-[var(--shadow-card)] border border-border p-6 transition-[var(--transition-base)];
+  }
+
+  .walmart-card:hover {
+    @apply shadow-[var(--shadow-elegant)] transform-gpu scale-[1.02];
+  }
+
+  .walmart-button {
+    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium transition-[var(--transition-base)] shadow-[var(--shadow-subtle)];
+  }
+
+  .walmart-button:hover {
+    @apply shadow-[var(--shadow-card)] transform-gpu scale-[1.05] brightness-110;
+  }
+
+  .walmart-sidebar {
+    @apply bg-[hsl(var(--sidebar-bg))] text-[hsl(var(--sidebar-foreground))] fixed left-0 top-0 h-full w-64 transform-gpu transition-transform duration-300 ease-in-out z-50;
+  }
+
+  .walmart-sidebar.closed {
+    @apply -translate-x-full;
+  }
+
+  .walmart-metric-card {
+    @apply walmart-card text-center;
+  }
+
+  .walmart-metric-value {
+    @apply text-3xl font-bold text-primary mb-2;
+  }
+
+  .walmart-metric-label {
+    @apply text-sm text-muted-foreground font-medium;
+  }
+
+  .walmart-section {
+    @apply py-16 px-4 max-w-7xl mx-auto;
+  }
+
+  .walmart-heading {
+    @apply text-3xl font-bold mb-8 text-center text-foreground;
+  }
+
+  .walmart-subheading {
+    @apply text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto leading-relaxed;
+  }
+
+  /* Chart popup */
+  .chart-popup {
+    @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl shadow-2xl p-6 z-[100] min-w-[400px] opacity-0 scale-90 transition-all duration-300 pointer-events-none;
+  }
+
+  .chart-popup.active {
+    @apply opacity-100 scale-100 pointer-events-auto;
+  }
+
+  .alert-panel {
+    @apply fixed top-0 right-0 w-80 h-full bg-card shadow-2xl transform translate-x-full transition-transform duration-300 z-50 overflow-y-auto;
+  }
+
+  .alert-panel.open {
+    @apply translate-x-0;
+  }
+
+  /* Form styles */
+  .walmart-input {
+    @apply w-full px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent transition-[var(--transition-fast)] bg-background;
+  }
+
+  .walmart-textarea {
+    @apply walmart-input resize-none h-32;
+  }
+
+  /* Table styles */
+  .walmart-table {
+    @apply w-full border-collapse bg-card rounded-lg overflow-hidden shadow-[var(--shadow-card)];
+  }
+
+  .walmart-table th {
+    @apply bg-muted text-left p-4 font-semibold text-muted-foreground border-b border-border;
+  }
+
+  .walmart-table td {
+    @apply p-4 border-b border-border;
+  }
+
+  .walmart-table tbody tr:nth-child(even) {
+    @apply bg-muted/20;
+  }
+
+  .walmart-table tbody tr:hover {
+    @apply bg-muted/40 transition-colors;
+  }
+
+  /* Timeline styles */
+  .timeline-item {
+    @apply relative pl-8 pb-8 border-l-2 border-border last:pb-0;
+  }
+
+  .timeline-item::before {
+    @apply absolute -left-2 top-0 w-4 h-4 bg-primary rounded-full;
+    content: '';
+  }
+
+  .timeline-date {
+    @apply text-sm font-medium text-primary mb-1;
+  }
+
+  .timeline-content {
+    @apply text-muted-foreground;
+  }
+}
