@@ -1,0 +1,11 @@
+# Ignore local dependency folders
+node_modules
+dist
+build
+
+# Ignore Git folder and metadata
+.git
+.gitignore
+
+# OS files
+.DS_Store
