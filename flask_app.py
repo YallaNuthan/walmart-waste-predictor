@@ -7,8 +7,8 @@ from datetime import datetime
 from prophet import Prophet
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
-# Serve built frontend from the "frontend" folder
-app = Flask(__name__, static_folder='frontend', static_url_path='/')
+# Serve built frontend from the "frontend" folder, at the site root
+app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app)
 
 # ─── Load Models ───────────────────────────────────────────────────────────────
@@ -27,6 +27,15 @@ if not os.path.exists(LEADERBOARD_FILE):
         "waste_generated_kg", "date", "ai_score"
     ]).to_csv(LEADERBOARD_FILE, index=False)
 
+# ─── Serve Frontend (Catch‑All) ─────────────────────────────────────────────────
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    full_path = os.path.join(app.static_folder, path)
+    if path and os.path.exists(full_path):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
+
 # ─── SMART BULK RECOMMENDATIONS ───────────────────────────────────────────────
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
@@ -34,11 +43,8 @@ def upload_csv():
     try:
         file = request.files['file']
         df = pd.read_csv(file)
-
-        required = {
-            "product_id","name","category","stock",
-            "expiry_date","store_location","freshness_score"
-        }
+        required = {"product_id","name","category","stock",
+                    "expiry_date","store_location","freshness_score"}
         if not required.issubset(df.columns):
             return jsonify(success=False, error="Missing required columns."), 400
 
@@ -47,13 +53,10 @@ def upload_csv():
         df["days_to_expiry"] = df["expiry_date"].apply(
             lambda x: (x.date() - today).days if pd.notna(x) else pd.NA
         )
-
         df["expiry_risk"] = df.apply(
-            lambda r: 1
-                if pd.notna(r["days_to_expiry"])
-                   and r["days_to_expiry"] <= 2
-                   and r["freshness_score"] < 0.7
-                else 0,
+            lambda r: 1 if pd.notna(r["days_to_expiry"])
+                          and r["days_to_expiry"] <= 2
+                          and r["freshness_score"] < 0.7 else 0,
             axis=1
         )
         df["expiry_status"] = df["days_to_expiry"].apply(
@@ -61,7 +64,6 @@ def upload_csv():
                 if pd.isna(d)
                 else ("Already Expired" if d < 0 else f"{d} day(s) left")
         )
-
         if 'previous_sales' not in df:
             df['previous_sales'] = (df['stock'] * 0.7).astype(int).clip(lower=1)
         if 'temperature_C' not in df:
@@ -74,7 +76,6 @@ def upload_csv():
             axis=1
         )
         df["recommendation"] = df["expiry_risk"].map({1: "Donate", 0: "Keep in Stock"})
-
         last_recommendation_df = df.copy()
 
         alerts_df = df[
@@ -85,11 +86,9 @@ def upload_csv():
         alerts_df["alert_reason"] = alerts_df.apply(
             lambda r: "❗ Expiring Today"
                 if r.days_to_expiry < 1 else
-                ("📉 Overstocked, Low Demand"
-                    if r.stock > 50 and r.daily_demand < 10 else
-                    ("⚡ Demand Surge, Low Stock"
-                        if r.daily_demand > 80 and r.stock < 20 else
-                        "Unknown")),
+                ("📉 Overstocked, Low Demand" if r.stock > 50 and r.daily_demand < 10 else
+                 ("⚡ Demand Surge, Low Stock" if r.daily_demand > 80 and r.stock < 20 else
+                  "Unknown")),
             axis=1
         )
         alerts_df["expiry_date"] = alerts_df["expiry_date"].dt.strftime("%d-%m-%Y")
@@ -162,8 +161,7 @@ def forecast_demand():
 def forecast_waste():
     try:
         file = request.files.get('file')
-        if not file:
-            return jsonify(error="No file uploaded"), 400
+        if not file: return jsonify(error="No file uploaded"), 400
         df = pd.read_csv(file)
         req = {"store_location","item_name","date","waste_kg"}
         if not req.issubset(df.columns):
