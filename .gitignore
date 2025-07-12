@@ -1,19 +1,21 @@
-# ── Exclude raw Lovable source ─────────────────────────────────────────────
-lovable‑ui/
+# ── Lovable‑UI source: track code, but ignore its deps & build output
+lovable-ui/node_modules/
+lovable-ui/dist/
 
-# ── Exclude local frontend build/dev files ─────────────────────────────────
+# ── Backend caches
+__pycache__/
+*.py[cod]
+
+# ── Repo‑root Node & global build dirs
 node_modules/
 build/
 dist/
-frontend/src/
-frontend/public/
 
-# ── Exclude git and GitHub Actions ─────────────────────────────────────────
+# ── We WANT to track frontend/ (built output), so don’t ignore it
+
+# ── Git metadata
 .git
-.gitignore
 .github/
 
-# ── Exclude OS and Python caches ────────────────────────────────────────────
+# ── OS files
 .DS_Store
-__pycache__/
-*.py[cod]
