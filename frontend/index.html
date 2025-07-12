@@ -34,62 +34,63 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Lovable UI built CSS & JS -->
+    <!-- Lovable UI assets (do not override custom dashboard) -->
     <link rel="stylesheet" href="/assets/index-CF7nD4AK.css" />
     <script type="module" src="/assets/index-BOC2bd3T.js"></script>
 
-    <!-- Custom dashboard styles -->
+    <!-- Custom dashboard styles (ensure they come after Lovable CSS) -->
     <style>
       * { box-sizing: border-box; }
       body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; margin: 0; }
 
+      /* Sidebar */
       .sidebar {
         height: 100%; width: 250px; position: fixed; top: 0; left: -250px;
-        background-color: #003087; overflow-x: hidden; transition: 0.3s;
-        padding-top: 60px; z-index: 1000;
+        background-color: #003087; transition: 0.3s; padding-top: 60px; z-index: 1000;
       }
       .sidebar a {
-        padding: 16px 24px; text-decoration: none; font-size: 18px;
-        color: #fff; display: block;
+        display: block; padding: 16px 24px; color: #fff; text-decoration: none; font-size: 18px;
       }
       .sidebar a:hover { background-color: #0050c2; }
-      .openbtn {
-        font-size: 24px; cursor: pointer; background-color: #003087; color: white;
-        padding: 12px 18px; border: none; position: fixed; top: 10px; left: 10px; z-index: 1100;
-      }
 
+      /* Buttons & icons */
+      .openbtn {
+        position: fixed; top: 10px; left: 10px; z-index: 1100;
+        background-color: #003087; color: #fff; border: none; padding: 12px 18px;
+        font-size: 24px; cursor: pointer; border-radius: 4px;
+      }
       .bell-icon, .chart-icon {
         position: fixed; top: 14px; font-size: 24px; cursor: pointer; z-index: 1100;
       }
       .bell-icon { right: 60px; }
       .chart-icon { right: 20px; }
 
+      /* Popups */
       .alert-box, .chart-popup {
-        position: fixed; background: white; border: 1px solid #ccc;
-        border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); padding: 16px;
-        display: none; z-index: 1200;
+        position: fixed; background: #fff; border: 1px solid #ccc;
+        border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        padding: 16px; display: none; z-index: 1200;
       }
-      .alert-box {
-        top: 50px; right: 60px; width: 320px; max-height: 400px; overflow-y: auto;
-      }
-      .chart-popup {
-        top: 50px; right: 20px; width: 360px; height: 250px;
-      }
+      .alert-box { top: 50px; right: 60px; width: 320px; max-height: 400px; overflow-y: auto; }
+      .chart-popup { top: 50px; right: 20px; width: 360px; height: 250px; }
 
+      /* Main content */
       #main { padding: 20px; margin-left: 0; transition: margin-left 0.3s; }
       .container {
-        background: white; border-radius: 10px; padding: 30px;
-        margin: 20px auto; max-width: 1100px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        max-width: 1100px; margin: 20px auto; background: #fff;
+        border-radius: 10px; padding: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
       }
-      h2 { text-align: center; color: #003087; }
-      label { display: block; margin: 10px 0 6px; font-weight: bold; }
+
+      /* Typography & tables */
+      h2 { text-align: center; color: #003087; margin-bottom: 20px; }
+      label { font-weight: bold; margin-top: 12px; display: block; }
       input, select {
-        width: 100%; padding: 10px; font-size: 16px; margin-bottom: 12px;
-        border-radius: 6px; border: 1px solid #ccc;
+        width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px;
+        font-size: 16px; border: 1px solid #ccc; border-radius: 6px;
       }
-      button {
-        background-color: #0071ce; color: white; padding: 10px 20px;
-        border: none; border-radius: 6px; font-size: 16px; cursor: pointer;
+      button { 
+        background-color: #0071ce; color: #fff; border: none; padding: 10px 20px;
+        font-size: 16px; border-radius: 6px; cursor: pointer;
       }
       button:hover { background-color: #005bbb; }
       table {
@@ -98,7 +99,7 @@
       th, td {
         border: 1px solid #ddd; padding: 12px; text-align: center;
       }
-      th { background-color: #0071ce; color: white; }
+      th { background-color: #0071ce; color: #fff; }
       tr:nth-child(even) { background-color: #f2f2f2; }
 
       .result { margin-top: 12px; font-weight: bold; }
@@ -106,20 +107,14 @@
       .active { display: block; }
 
       .welcome {
-        text-align: center; margin-top: 100px; font-size: 26px;
-        color: #003087;
+        text-align: center; margin-top: 100px; font-size: 26px; color: #003087;
       }
-      .alert-item {
-        border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px;
-      }
+      .alert-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; }
     </style>
   </head>
 
   <body>
-    <!-- Lovable React app root (if you plan to use it) -->
-    <div id="root"></div>
-
-    <!-- Custom dashboard markup -->
+    <!-- Dashboard sidebar & controls -->
     <div id="mySidebar" class="sidebar">
       <a href="javascript:void(0)" onclick="navigate('page1')">📈 Demand Forecast</a>
       <a href="javascript:void(0)" onclick="navigate('page2')">🗑 Waste Risk</a>
@@ -127,12 +122,16 @@
       <a href="javascript:void(0)" onclick="navigate('page4')">🏁 AI Leaderboard</a>
       <a href="javascript:void(0)" onclick="navigate('page5')">📉 Waste Forecast</a>
     </div>
+
     <button class="openbtn" onclick="toggleSidebar()">☰</button>
     <div class="bell-icon" onclick="toggleAlerts()">🔔</div>
     <div class="chart-icon" onmouseenter="showChart()" onmouseleave="hideChart()">📊</div>
     <div id="alertBox" class="alert-box"></div>
-    <div id="chartPopup" class="chart-popup"><canvas id="wasteChart"></canvas></div>
+    <div id="chartPopup" class="chart-popup">
+      <canvas id="wasteChart"></canvas>
+    </div>
 
+    <!-- Main content area -->
     <div id="main">
       <div id="welcome" class="welcome">
         <h1>👋 Welcome to Walmart Waste Predictor</h1>
@@ -149,7 +148,7 @@
         <div id="df_result" class="result"></div>
       </div>
 
-      <!-- Page 2: Waste Risk -->
+      <!-- Page 2: Waste Risk Prediction -->
       <div id="page2" class="page container">
         <h2>🗑 Waste Risk Prediction</h2>
         <label>Stock</label><input type="number" id="wr_stock"/>
@@ -159,7 +158,7 @@
         <div id="wr_result" class="result"></div>
       </div>
 
-      <!-- Page 3: Smart Bulk -->
+      <!-- Page 3: Smart Recommendations -->
       <div id="page3" class="page container">
         <h2>📦 Smart Bulk Recommendations</h2>
         <input type="file" id="smart_csv" accept=".csv"/><button onclick="uploadSmartCSV()">Upload & Analyze</button>
@@ -184,93 +183,97 @@
       </div>
     </div>
 
-    <!-- Custom dashboard scripts -->
+    <!-- Dashboard script logic -->
     <script>
       const BASE = window.location.origin;
       let chartInstance = null, latestAlerts = [];
 
       function toggleSidebar() {
         const bar = document.getElementById("mySidebar");
-        bar.style.left = bar.style.left==='0px' ? '-250px' : '0px';
+        bar.style.left = (bar.style.left === "0px") ? "-250px" : "0px";
       }
       function navigate(id) {
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        welcome.style.display='none'; 
-        mySidebar.style.left='-250px';
-        alertBox.style.display='none';
+        document.querySelectorAll('.page').forEach(p => p.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+        document.getElementById("welcome").style.display = "none";
+        document.getElementById("mySidebar").style.left = "-250px";
+        document.getElementById("alertBox").style.display = "none";
       }
       function toggleAlerts() {
-        const box=alertBox;
-        box.style.display=box.style.display==='block'?'none':'block';
-        box.innerHTML="<h4>⚠️ Smart Alerts</h4><hr>";
-        if(!latestAlerts.length) box.innerHTML+="<p>No critical alerts!</p>";
-        else latestAlerts.forEach(a=>{
-          box.innerHTML+=`
-            <div class="alert-item">
-              🔎 <b>${a.name}</b> (${a.store_location})<br>
-              📦 Stock: ${a.stock}, 📈 Demand: ${a.daily_demand}<br>
-              🧾 Expiry: ${a.expiry_date}<br>
-              🧠 Alert: <b>${a.alert_reason}</b>
-            </div>`;
-        });
+        const box = document.getElementById("alertBox");
+        box.style.display = (box.style.display === "block") ? "none" : "block";
+        box.innerHTML = "<h4>⚠️ Smart Alerts</h4><hr>";
+        if (!latestAlerts.length) {
+          box.innerHTML += "<p>No critical alerts!</p>";
+        } else {
+          latestAlerts.forEach(a => {
+            box.innerHTML += `
+              <div class="alert-item">
+                🔎 <b>${a.name}</b> (${a.store_location})<br>
+                📦 Stock: ${a.stock}, 📈 Demand: ${a.daily_demand}<br>
+                🧾 Expiry: ${a.expiry_date}<br>
+                🧠 Alert: <b>${a.alert_reason}</b>
+              </div>`;
+          });
+        }
       }
       async function forecastDemand() {
-        const res=await fetch(`${BASE}/forecast_demand`,{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            previous_sales:+df_prev.value,stock:+df_stock.value,temperature_C:+df_temp.value
+        const res = await fetch(`${BASE}/forecast_demand`, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            previous_sales:+df_prev.value, stock:+df_stock.value, temperature_C:+df_temp.value
           })
-        }),j=await res.json();
-        df_result.innerText="Forecasted Demand: "+j.forecasted_demand;
+        });
+        const j = await res.json();
+        df_result.innerText = "Forecasted Demand: " + j.forecasted_demand;
       }
       async function predictWaste() {
-        const res=await fetch(`${BASE}/predict`,{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            stock:+wr_stock.value,freshness_score:+wr_fresh.value,days_to_expiry:+wr_expiry.value
+        const res = await fetch(`${BASE}/predict`, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            stock:+wr_stock.value, freshness_score:+wr_fresh.value, days_to_expiry:+wr_expiry.value
           })
-        }),j=await res.json();
-        wr_result.innerText="Prediction: "+j.prediction;
+        });
+        const j = await res.json();
+        wr_result.innerText = "Prediction: " + j.prediction;
       }
       async function uploadSmartCSV() {
-        const fd=new FormData();fd.append('file',smart_csv.files[0]);
-        const j=await (await fetch(`${BASE}/upload_csv`,{method:'POST',body:fd})).json();
-        latestAlerts=j.alerts||[];smart_result.innerText="Recommendations Loaded!";
-        smart_table.innerHTML="<tr>"+Object.keys(j.recommendations[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>";
-        j.recommendations.forEach(r=>smart_table.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`);
+        const fd = new FormData(); fd.append("file", smart_csv.files[0]);
+        const j = await (await fetch(`${BASE}/upload_csv`,{method:"POST",body:fd})).json();
+        latestAlerts = j.alerts||[]; smart_result.innerText="Recommendations Loaded!";
+        smart_table.innerHTML = "<tr>"+Object.keys(j.recommendations[0]).map(k=>`<th>${k}</th>`).join("")+"</tr>";
+        j.recommendations.forEach(r=> smart_table.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join("")}</tr>`);
       }
       async function uploadLeaderboard() {
-        const fd=new FormData();fd.append('file',leader_csv.files[0]);
-        await fetch(`${BASE}/upload_waste_ai`,{method:'POST',body:fd});
-        leader_msg.innerText="Report uploaded!";
-        const daily=await (await fetch(`${BASE}/ai_daily_leaderboard`)).json(),
-              monthly=await (await fetch(`${BASE}/ai_monthly_leaderboard`)).json();
-        ['daily_leader','monthly_leader'].forEach((id,i)=>{
-          const data=i?monthly:daily, tbl=document.getElementById(id);
-          tbl.innerHTML="<tr>"+Object.keys(data[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>";
-          data.forEach(r=>tbl.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`);
+        const fd=new FormData(); fd.append("file", leader_csv.files[0]);
+        await fetch(`${BASE}/upload_waste_ai`,{method:"POST",body:fd}); leader_msg.innerText="Report uploaded!";
+        const daily = await (await fetch(`${BASE}/ai_daily_leaderboard`)).json(),
+              monthly = await (await fetch(`${BASE}/ai_monthly_leaderboard`)).json();
+        [["daily_leader",daily],["monthly_leader",monthly]].forEach(([id,data])=>{
+          const tbl=document.getElementById(id);
+          tbl.innerHTML = "<tr>"+Object.keys(data[0]).map(k=>`<th>${k}</th>`).join("")+"</tr>";
+          data.forEach(r=> tbl.innerHTML+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join("")}</tr>`);
         });
       }
       async function uploadWasteCSV() {
-        const fd=new FormData();fd.append('file',waste_csv.files[0]);
-        const j=await (await fetch(`${BASE}/forecast_waste`,{method:'POST',body:fd})).json();
-        waste_table.innerHTML=j.length
-          ? "<tr>"+Object.keys(j[0]).map(k=>`<th>${k}</th>`).join('')+"</tr>"+j.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')
+        const fd=new FormData(); fd.append("file", waste_csv.files[0]);
+        const j = await (await fetch(`${BASE}/forecast_waste`,{method:"POST",body:fd})).json();
+        waste_table.innerHTML = j.length
+          ? "<tr>"+Object.keys(j[0]).map(k=>`<th>${k}</th>`).join("")+"</tr>"+ j.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join("")}</tr>`).join("")
           : "<tr><td>No forecast data available</td></tr>";
       }
       async function showChart() {
-        chartPopup.style.display='block';
-        const j=await (await fetch(`${BASE}/combined_chart_data`)).json();
-        const ctx=wasteChart.getContext('2d');
-        if(chartInstance)chartInstance.destroy();
-        chartInstance=new Chart(ctx,{
-          type:'bar',
-          data:{labels:j.forecast_chart.labels,datasets:[{label:'Waste Generated (kg)',data:j.forecast_chart.data,backgroundColor:'rgba(0,112,192,0.5)',borderColor:'#0070c0',borderWidth:2}]},
+        chartPopup.style.display="block";
+        const j = await (await fetch(`${BASE}/combined_chart_data`)).json();
+        const ctx = wasteChart.getContext("2d");
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx,{
+          type:"bar",
+          data:{labels:j.forecast_chart.labels,datasets:[{label:"Waste Generated (kg)",data:j.forecast_chart.data,backgroundColor:"rgba(0,112,192,0.5)",borderColor:"#0070c0",borderWidth:2}]},
           options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
         });
       }
-      function hideChart(){chartPopup.style.display='none';}
+      function hideChart(){ chartPopup.style.display="none"; }
     </script>
   </body>
 </html>
